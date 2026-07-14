@@ -1,0 +1,1 @@
+export { VerifyScreen, VerifyScreen as default } from './VerifyScreen';

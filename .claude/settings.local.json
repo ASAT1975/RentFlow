@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -)",
+      "Bash(mkdir -p \"C:/Users/GADGET~1/AppData/Local/Temp/claude/c--Users-GADGET-STORE-Desktop-RentFlow/2c98f57d-da06-47f4-8971-951d4502be0b/scratchpad\")",
+      "Bash(cp scratch_preview.png \"C:/Users/GADGET~1/AppData/Local/Temp/claude/c--Users-GADGET-STORE-Desktop-RentFlow/2c98f57d-da06-47f4-8971-951d4502be0b/scratchpad/\")",
+      "Bash(git checkout *)",
+      "Bash(npx tsc *)"
+    ]
+  }
+}
