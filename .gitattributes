@@ -1,0 +1,16 @@
+# Set the default behavior, in case people don't have core.autocrlf set.
+* text=auto
+
+#
+# The following are chosen to avoid problems with Windows, while still playing
+# nicely with non-Windows users.
+#
+*.java text
+*.js text
+*.jsx text
+*.ts text
+*.tsx text
+*.json text
+*.md text
+*.cmd text eol=crlf
+*.sh text eol=lf
