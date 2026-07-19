@@ -6,11 +6,11 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from 'react';
+} from "react";
 
-import { paymentsApi, type Payment, type PaymentStatus } from '@/api';
-import { useAuth } from '@/store/auth';
-import { usePortfolio } from '@/store/portfolio';
+import { paymentsApi, type Payment, type PaymentStatus } from "@/api";
+import { useAuth } from "@/store/auth";
+import { usePortfolio } from "@/store/portfolio";
 
 /** A payment in the shape the screens render. */
 export type PaymentItem = {
@@ -75,31 +75,35 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
   const [payments, setPayments] = useState<PaymentItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const propertyIds = properties
-    .map((p) => p.backendId)
-    .filter((id): id is number => typeof id === 'number');
-  const propertyIdsKey = propertyIds.join(',');
+  const propertyIds = useMemo(
+    () =>
+      properties
+        .map((p) => p.backendId)
+        .filter((id): id is number => typeof id === "number"),
+    [properties],
+  );
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
     try {
-      if (role === 'LANDLORD') {
+      if (role === "LANDLORD") {
         const lists = await Promise.all(
           propertyIds.map((id) => paymentsApi.forProperty(id).catch(() => [])),
         );
         setPayments(lists.flat().map(toItem));
-      } else if (role === 'TENANT') {
+      } else if (role === "TENANT") {
         const mine = await paymentsApi.mine();
         setPayments(mine.map(toItem));
       }
-    } catch {
+    } catch (err) {
       // Keep the previous list on a transient failure.
+      console.error("Failed to refresh payments:", err);
     } finally {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, role, propertyIdsKey]);
+  }, [isAuthenticated, role, propertyIds]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -118,7 +122,12 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
   );
 
   const charge = useCallback(
-    async (tenantEmail: string, propertyId: number, totalAmount: number, dueDate: string) => {
+    async (
+      tenantEmail: string,
+      propertyId: number,
+      totalAmount: number,
+      dueDate: string,
+    ) => {
       await paymentsApi.create(tenantEmail, propertyId, totalAmount, dueDate);
       await refresh();
     },
@@ -126,21 +135,35 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
   );
 
   const outstanding = payments
-    .filter((p) => p.status !== 'PAID')
+    .filter((p) => p.status !== "PAID")
     .reduce((sum, p) => sum + Math.max(0, p.balance), 0);
   const collected = payments.reduce((sum, p) => sum + p.amountPaid, 0);
   const expected = payments.reduce((sum, p) => sum + p.totalAmount, 0);
 
   const value = useMemo<PaymentsContextValue>(
-    () => ({ payments, loading, outstanding, collected, expected, refresh, pay, charge }),
+    () => ({
+      payments,
+      loading,
+      outstanding,
+      collected,
+      expected,
+      refresh,
+      pay,
+      charge,
+    }),
     [payments, loading, outstanding, collected, expected, refresh, pay, charge],
   );
 
-  return <PaymentsContext.Provider value={value}>{children}</PaymentsContext.Provider>;
+  return (
+    <PaymentsContext.Provider value={value}>
+      {children}
+    </PaymentsContext.Provider>
+  );
 }
 
 export function usePayments() {
   const ctx = useContext(PaymentsContext);
-  if (!ctx) throw new Error('usePayments must be used within a PaymentsProvider');
+  if (!ctx)
+    throw new Error("usePayments must be used within a PaymentsProvider");
   return ctx;
 }

@@ -1,3 +1,4 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   createContext,
   useCallback,
@@ -6,12 +7,16 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from 'react';
+} from "react";
 
-import { maintenanceApi, type MaintenanceRequest, type MaintenanceStatus } from '@/api';
-import { useAuth } from '@/store/auth';
-import { usePortfolio } from '@/store/portfolio';
-import { useTenant } from '@/store/tenant';
+import {
+  maintenanceApi,
+  type MaintenanceRequest,
+  type MaintenanceStatus,
+} from "@/api";
+import { useAuth } from "@/store/auth";
+import { usePortfolio } from "@/store/portfolio";
+import { useTenant } from "@/store/tenant";
 
 /** A maintenance request in a shape the screens render. */
 export type MaintenanceItem = {
@@ -26,12 +31,12 @@ export type MaintenanceItem = {
 };
 
 /** Backend status → the label the UI shows. */
-export type MaintenanceLabel = 'Open' | 'In Progress' | 'Completed';
+export type MaintenanceLabel = "Open" | "In Progress" | "Completed";
 
 export const STATUS_LABEL: Record<MaintenanceStatus, MaintenanceLabel> = {
-  PENDING: 'Open',
-  IN_PROGRESS: 'In Progress',
-  RESOLVED: 'Completed',
+  PENDING: "Open",
+  IN_PROGRESS: "In Progress",
+  RESOLVED: "Completed",
 };
 
 function toItem(request: MaintenanceRequest): MaintenanceItem {
@@ -66,6 +71,8 @@ const MaintenanceContext = createContext<MaintenanceContextValue | null>(null);
  */
 export function MaintenanceProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, user } = useAuth();
+  // ... other hooks
+
   const { properties } = usePortfolio();
   const { unit } = useTenant();
 
@@ -73,44 +80,72 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
   const [requests, setRequests] = useState<MaintenanceItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const propertyIds = properties
-    .map((p) => p.backendId)
-    .filter((id): id is number => typeof id === 'number');
-  const propertyIdsKey = propertyIds.join(',');
+  const STORAGE_KEY = `@maintenance_requests_${user?.email}`;
+
+  const propertyIds = useMemo(
+    () =>
+      properties
+        .map((p) => p.backendId)
+        .filter((id): id is number => typeof id === "number"),
+    [properties],
+  );
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
     try {
-      if (role === 'LANDLORD') {
+      if (role === "LANDLORD") {
         const lists = await Promise.all(
-          propertyIds.map((id) => maintenanceApi.forProperty(id).catch(() => [])),
+          propertyIds.map((id) =>
+            maintenanceApi.forProperty(id).catch(() => []),
+          ),
         );
-        setRequests(lists.flat().map(toItem));
-      } else if (role === 'TENANT') {
+        const freshRequests = lists.flat().map(toItem);
+        setRequests(freshRequests);
+        void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(freshRequests));
+      } else if (role === "TENANT") {
         const mine = await maintenanceApi.mine();
         setRequests(mine.map(toItem));
+        void AsyncStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify(mine.map(toItem)),
+        );
       }
-    } catch {
+    } catch (err) {
       // Leave the previous list in place on a transient failure.
+      console.error("Failed to refresh maintenance requests:", err);
     } finally {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, role, propertyIdsKey]);
+  }, [isAuthenticated, role, propertyIds, STORAGE_KEY]);
 
   useEffect(() => {
     if (isAuthenticated) {
+      // Load from cache instantly, then refresh in the background.
+      const loadFromCache = async () => {
+        const cached = await AsyncStorage.getItem(STORAGE_KEY);
+        if (cached) {
+          setRequests(JSON.parse(cached));
+        }
+      };
+      void loadFromCache();
       void refresh();
     } else {
+      // Clear data on sign out
       setRequests([]);
+      void AsyncStorage.removeItem(STORAGE_KEY);
     }
-  }, [isAuthenticated, refresh]);
+  }, [isAuthenticated, refresh, STORAGE_KEY, role]);
 
   const submit = useCallback(
     async (title: string, description: string) => {
-      if (!unit) throw new Error('You have not joined a property yet.');
-      await maintenanceApi.submit(unit.propertyId, title.trim(), description.trim());
+      if (!unit) throw new Error("You have not joined a property yet.");
+      await maintenanceApi.submit(
+        unit.propertyId,
+        title.trim(),
+        description.trim(),
+      );
       await refresh();
     },
     [unit, refresh],
@@ -134,11 +169,16 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
     [requests, loading, refresh, getById, submit, updateStatus],
   );
 
-  return <MaintenanceContext.Provider value={value}>{children}</MaintenanceContext.Provider>;
+  return (
+    <MaintenanceContext.Provider value={value}>
+      {children}
+    </MaintenanceContext.Provider>
+  );
 }
 
 export function useMaintenance() {
   const ctx = useContext(MaintenanceContext);
-  if (!ctx) throw new Error('useMaintenance must be used within a MaintenanceProvider');
+  if (!ctx)
+    throw new Error("useMaintenance must be used within a MaintenanceProvider");
   return ctx;
 }

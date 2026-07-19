@@ -1,8 +1,19 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react';
+import * as Notifications from "expo-notifications";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import { Platform } from "react-native";
 
-import { authApi, setAuthToken, type Role } from '@/api';
+import { authApi, setAuthToken, type Role } from "@/api";
 
-export type GoogleSignInResult = { status: 'ok'; role: Role } | { status: 'needsRole' };
+export type GoogleSignInResult =
+  | { status: "ok"; role: Role }
+  | { status: "needsRole" };
 
 export type AuthUser = {
   name: string;
@@ -46,14 +57,62 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
-  const [pendingSignup, setPendingSignup] = useState<PendingSignup | null>(null);
-  const [pendingGoogleToken, setPendingGoogleToken] = useState<string | null>(null);
+  const [pendingSignup, setPendingSignup] = useState<PendingSignup | null>(
+    null,
+  );
+  const [pendingGoogleToken, setPendingGoogleToken] = useState<string | null>(
+    null,
+  );
 
-  const applySession = useCallback((nextToken: string, nextUser: AuthUser) => {
-    setToken(nextToken);
-    setUser(nextUser);
-    setAuthToken(nextToken);
+  const registerForPushNotifications = useCallback(async () => {
+    // This function can be expanded to handle token refreshes, etc.
+    let token;
+    try {
+      if (Platform.OS === "android") {
+        await Notifications.setNotificationChannelAsync("default", {
+          name: "default",
+          importance: Notifications.AndroidImportance.MAX,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: "#FF231F7C",
+        });
+      }
+
+      const { status: existingStatus } =
+        await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+
+      if (existingStatus !== "granted") {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== "granted") {
+        console.log("Push notification permission not granted.");
+        return;
+      }
+
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+
+      // Send the token to your backend to store it against the user
+      await authApi.registerPushToken(token);
+      console.log("Push token registered with backend:", token);
+    } catch (error) {
+      console.error("Failed to register for push notifications:", error);
+    }
   }, []);
+
+  const applySession = useCallback(
+    (nextToken: string, nextUser: AuthUser) => {
+      setToken(nextToken);
+      setUser(nextUser);
+      setAuthToken(nextToken);
+
+      // Once the user is authenticated, register for push notifications.
+      // This won't re-prompt if permission is already granted.
+      void registerForPushNotifications();
+    },
+    [registerForPushNotifications],
+  );
 
   const signIn = useCallback(
     async (email: string, password: string): Promise<Role> => {
@@ -73,13 +132,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // A pending Google sign-in takes priority over email/password.
       if (pendingGoogleToken) {
         const res = await authApi.google(pendingGoogleToken, role);
-        if (!res.token) throw new Error('Google sign-in failed. Please try again.');
-        applySession(res.token, { name: res.name, email: res.email, role: res.role });
+        if (!res.token)
+          throw new Error("Google sign-in failed. Please try again.");
+        applySession(res.token, {
+          name: res.name,
+          email: res.email,
+          role: res.role,
+        });
         setPendingGoogleToken(null);
         return res.role;
       }
       if (!pendingSignup) {
-        throw new Error('Missing sign-up details. Please start again.');
+        throw new Error("Missing sign-up details. Please start again.");
       }
       const res = await authApi.register(
         pendingSignup.name,
@@ -102,12 +166,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (accessToken: string): Promise<GoogleSignInResult> => {
       const res = await authApi.google(accessToken);
       if (res.token) {
-        applySession(res.token, { name: res.name, email: res.email, role: res.role });
-        return { status: 'ok', role: res.role };
+        applySession(res.token, {
+          name: res.name,
+          email: res.email,
+          role: res.role,
+        });
+        return { status: "ok", role: res.role };
       }
       // New Google user: stash the token until a role is chosen.
       setPendingGoogleToken(accessToken);
-      return { status: 'needsRole' };
+      return { status: "needsRole" };
     },
     [applySession],
   );
@@ -131,7 +199,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithGoogle,
       signOut,
     }),
-    [user, token, signIn, beginSignup, completeSignup, signInWithGoogle, signOut],
+    [
+      user,
+      token,
+      signIn,
+      beginSignup,
+      completeSignup,
+      signInWithGoogle,
+      signOut,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -139,6 +215,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within an AuthProvider');
+  if (!ctx) throw new Error("useAuth must be used within an AuthProvider");
   return ctx;
 }

@@ -6,10 +6,11 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from 'react';
+} from "react";
 
-import { unitsApi, type UnitStatus, type UnitSummary } from '@/api';
-import { useAuth } from '@/store/auth';
+import { unitsApi, type UnitStatus, type UnitSummary } from "@/api";
+import { ApiError } from "@/api/client";
+import { useAuth } from "@/store/auth";
 
 /** The tenant's rented unit, normalized across the join / "my unit" responses. */
 export type TenantUnit = {
@@ -22,11 +23,11 @@ export type TenantUnit = {
 
 function normalize(summary: UnitSummary): TenantUnit {
   return {
-    unitNumber: summary.unitNumber ?? summary.unit ?? '—',
+    unitNumber: summary.unitNumber ?? summary.unit ?? "—",
     property: summary.property,
     propertyId: summary.propertyId,
     rentAmount: summary.rentAmount,
-    status: summary.status ?? 'OCCUPIED',
+    status: summary.status ?? "OCCUPIED",
   };
 }
 
@@ -53,7 +54,7 @@ const TenantContext = createContext<TenantContextValue | null>(null);
  */
 export function TenantProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, user } = useAuth();
-  const isTenant = user?.role === 'TENANT';
+  const isTenant = user?.role === "TENANT";
 
   const [unit, setUnit] = useState<TenantUnit | null>(null);
   const [loading, setLoading] = useState(false);
@@ -64,9 +65,13 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     try {
       const mine = await unitsApi.mine();
       setUnit(normalize(mine));
-    } catch {
-      // No unit joined yet (backend throws when the tenant has no unit).
-      setUnit(null);
+    } catch (err) {
+      // A 404 means the tenant has no unit joined yet. Other errors are unexpected.
+      if (err instanceof ApiError && err.status === 404) {
+        setUnit(null);
+      } else {
+        console.error("Failed to refresh tenant unit:", err);
+      }
     } finally {
       setLoading(false);
     }
@@ -80,27 +85,42 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     }
   }, [isAuthenticated, isTenant, refresh]);
 
-  const joinUnit = useCallback(async (inviteCode: string): Promise<TenantUnit> => {
-    const joined = normalize(await unitsApi.join(inviteCode.trim()));
-    setUnit(joined);
-    return joined;
-  }, []);
+  const joinUnit = useCallback(
+    async (inviteCode: string): Promise<TenantUnit> => {
+      const joined = normalize(await unitsApi.join(inviteCode.trim()));
+      setUnit(joined);
+      return joined;
+    },
+    [],
+  );
 
-  const authorizePayment = useCallback(async (rentDueDay: number): Promise<string> => {
-    const res = await unitsApi.authorizePayment(rentDueDay);
-    return res.authorizationUrl;
-  }, []);
+  const authorizePayment = useCallback(
+    async (rentDueDay: number): Promise<string> => {
+      const res = await unitsApi.authorizePayment(rentDueDay);
+      return res.authorizationUrl;
+    },
+    [],
+  );
 
   const value = useMemo<TenantContextValue>(
-    () => ({ unit, loading, hasJoined: unit != null, refresh, joinUnit, authorizePayment }),
+    () => ({
+      unit,
+      loading,
+      hasJoined: unit != null,
+      refresh,
+      joinUnit,
+      authorizePayment,
+    }),
     [unit, loading, refresh, joinUnit, authorizePayment],
   );
 
-  return <TenantContext.Provider value={value}>{children}</TenantContext.Provider>;
+  return (
+    <TenantContext.Provider value={value}>{children}</TenantContext.Provider>
+  );
 }
 
 export function useTenant() {
   const ctx = useContext(TenantContext);
-  if (!ctx) throw new Error('useTenant must be used within a TenantProvider');
+  if (!ctx) throw new Error("useTenant must be used within a TenantProvider");
   return ctx;
 }
