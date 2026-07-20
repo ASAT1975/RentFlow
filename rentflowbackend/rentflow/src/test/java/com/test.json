@@ -1,6 +1,6 @@
 {
   "name": "Test User",
   "email": "test@example.com",
-  "password": "testpass123",
+  "password": "<test_password>",
   "role": "TENANT"
 }

@@ -1,4 +1,3 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   createContext,
   useCallback,
@@ -80,8 +79,6 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
   const [requests, setRequests] = useState<MaintenanceItem[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const STORAGE_KEY = `@maintenance_requests_${user?.email}`;
-
   const propertyIds = useMemo(
     () =>
       properties
@@ -102,14 +99,9 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
         );
         const freshRequests = lists.flat().map(toItem);
         setRequests(freshRequests);
-        void AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(freshRequests));
       } else if (role === "TENANT") {
         const mine = await maintenanceApi.mine();
         setRequests(mine.map(toItem));
-        void AsyncStorage.setItem(
-          STORAGE_KEY,
-          JSON.stringify(mine.map(toItem)),
-        );
       }
     } catch (err) {
       // Leave the previous list in place on a transient failure.
@@ -118,30 +110,20 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, role, propertyIds, STORAGE_KEY]);
+  }, [isAuthenticated, role, propertyIds]);
 
   useEffect(() => {
     if (isAuthenticated) {
-      // Load from cache instantly, then refresh in the background.
-      const loadFromCache = async () => {
-        const cached = await AsyncStorage.getItem(STORAGE_KEY);
-        if (cached) {
-          setRequests(JSON.parse(cached));
-        }
-      };
-      void loadFromCache();
       void refresh();
     } else {
-      // Clear data on sign out
       setRequests([]);
-      void AsyncStorage.removeItem(STORAGE_KEY);
     }
-  }, [isAuthenticated, refresh, STORAGE_KEY, role]);
+  }, [isAuthenticated, refresh, role]);
 
   const submit = useCallback(
     async (title: string, description: string) => {
       if (!unit) throw new Error("You have not joined a property yet.");
-      await maintenanceApi.submit(
+      await maintenanceApi.create(
         unit.propertyId,
         title.trim(),
         description.trim(),

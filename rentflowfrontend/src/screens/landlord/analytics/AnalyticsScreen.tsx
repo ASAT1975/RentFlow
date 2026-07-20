@@ -4,7 +4,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Brand } from '@/constants/brand';
-import { REVENUE_TREND } from '@/constants/landlord-data';
+import { usePayments } from '@/store/payments';
 import { usePortfolio } from '@/store/portfolio';
 
 import { styles } from './styles';
@@ -25,10 +25,29 @@ function formatGhs(n: number) {
 
 export function AnalyticsScreen() {
   const { properties, summary } = usePortfolio();
+  const { payments } = usePayments();
 
   const avgRent = summary.tenants
     ? Math.round(Number(summary.monthlyRevenue.replace(/[^0-9]/g, '')) / summary.tenants)
     : 0;
+
+  // Build a 6-month revenue trend from real payment data.
+  const revenueTrend = (() => {
+    const months: { month: string; value: number }[] = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = d.toLocaleString('en-GB', { month: 'short' });
+      const value = payments
+        .filter((p) => {
+          const pd = p.paidDate ? new Date(p.paidDate) : null;
+          return pd && pd.getFullYear() === d.getFullYear() && pd.getMonth() === d.getMonth();
+        })
+        .reduce((sum, p) => sum + p.amountPaid, 0);
+      months.push({ month: label, value });
+    }
+    return months;
+  })();
 
   const metrics: Metric[] = [
     { icon: 'bed-outline', tint: Brand.primarySoft, color: Brand.primary, label: 'Occupancy', value: `${Math.round(summary.occupancyRate * 100)}%` },
@@ -37,7 +56,7 @@ export function AnalyticsScreen() {
     { icon: 'business-outline', tint: Brand.primarySoft, color: Brand.accent, label: 'Properties', value: String(summary.properties) },
   ];
 
-  const maxTrend = Math.max(...REVENUE_TREND.map((d) => d.value));
+  const maxTrend = Math.max(1, ...revenueTrend.map((d) => d.value));
   const maxProp = Math.max(
     1,
     ...properties.map((p) => Number(p.revenue.replace(/[^0-9]/g, ''))),
@@ -60,8 +79,8 @@ export function AnalyticsScreen() {
             <Text style={styles.cardSub}>Last 6 months</Text>
           </View>
           <View style={styles.chart}>
-            {REVENUE_TREND.map((d, i) => {
-              const last = i === REVENUE_TREND.length - 1;
+            {revenueTrend.map((d, i) => {
+              const last = i === revenueTrend.length - 1;
               const h = Math.max(6, (d.value / maxTrend) * CHART_HEIGHT);
               return (
                 <View key={d.month} style={styles.chartCol}>

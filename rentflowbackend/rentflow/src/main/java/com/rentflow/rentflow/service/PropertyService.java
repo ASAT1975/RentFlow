@@ -6,6 +6,7 @@ import com.rentflow.rentflow.repository.PropertyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -20,7 +21,7 @@ public class PropertyService {
         property.setAddress(address);
         property.setRentAmount(rentAmount);
         property.setLandlord(landlord);
-        property.setInviteCode(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        property.setInviteCode(UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT));
         return propertyRepository.save(property);
     }
 

@@ -128,7 +128,7 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
       totalAmount: number,
       dueDate: string,
     ) => {
-      await paymentsApi.create(tenantEmail, propertyId, totalAmount, dueDate);
+      await paymentsApi.charge(tenantEmail, propertyId, totalAmount, dueDate);
       await refresh();
     },
     [refresh],

@@ -1,53 +1,63 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
-import { Brand } from '@/constants/brand';
+import { Brand } from "@/constants/brand";
+import { Spacing } from "@/constants/theme";
 
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: Brand.background,
   },
-
-  // Header.
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 4,
-    paddingBottom: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+    borderBottomWidth: 1,
+    borderBottomColor: Brand.border,
   },
   iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Brand.surface,
-    borderWidth: 1,
-    borderColor: Brand.border,
+    padding: Spacing.one,
+  },
+  iconBtnSpacer: {
+    width: 22 + Spacing.one * 2,
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: "600",
     color: Brand.textPrimary,
   },
-  iconBtnSpacer: {
-    width: 40,
-    height: 40,
+  historyBanner: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.three,
+    backgroundColor: Brand.primarySoft,
+    borderBottomWidth: 1,
+    borderBottomColor: Brand.border,
   },
-
-  // Filter chips.
+  historyBannerText: {
+    color: Brand.textSecondary,
+    fontWeight: "500",
+  },
+  historyBannerLink: {
+    color: Brand.primary,
+    fontWeight: "600",
+  },
   filters: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingBottom: 12,
+    flexDirection: "row",
+    paddingVertical: Spacing.three,
+    paddingHorizontal: Spacing.four,
+    gap: Spacing.two,
+    borderBottomWidth: 1,
+    borderBottomColor: Brand.border,
   },
   filter: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 999,
+    paddingVertical: Spacing.one + 2,
+    paddingHorizontal: Spacing.three,
+    borderRadius: 99,
     backgroundColor: Brand.surface,
     borderWidth: 1,
     borderColor: Brand.border,
@@ -57,81 +67,112 @@ export const styles = StyleSheet.create({
     borderColor: Brand.primary,
   },
   filterText: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontWeight: "500",
     color: Brand.textSecondary,
   },
   filterTextOn: {
-    color: Brand.onPrimary,
+    color: "#fff",
   },
-
   scroll: {
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 6,
-    paddingBottom: 28,
+    padding: Spacing.four,
+    gap: Spacing.four,
   },
-
+  empty: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: Spacing.two,
+    minHeight: 300,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: Brand.textMuted,
+  },
   groupLabel: {
-    marginTop: 16,
-    marginBottom: 10,
-    fontSize: 13,
-    fontWeight: '800',
-    color: Brand.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
+    fontWeight: "600",
+    color: Brand.textPrimary,
+    marginBottom: Spacing.two,
   },
-
   item: {
-    flexDirection: 'row',
-    gap: 14,
-    padding: 14,
-    marginBottom: 10,
-    borderRadius: 16,
-    backgroundColor: Brand.surface,
-    borderWidth: 1,
-    borderColor: Brand.border,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: Spacing.three,
+    paddingVertical: Spacing.three,
+    borderBottomWidth: 1,
+    borderBottomColor: Brand.border,
   },
   itemIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 13,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
   },
   itemTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 2,
   },
   itemTitle: {
-    flex: 1,
-    fontSize: 14,
-    fontWeight: '700',
+    fontWeight: "600",
     color: Brand.textPrimary,
+    flex: 1,
   },
   itemTime: {
     fontSize: 12,
-    color: Brand.textMuted,
+    color: Brand.textSecondary,
+    paddingLeft: Spacing.two,
   },
   itemBody: {
-    marginTop: 3,
-    fontSize: 13,
-    lineHeight: 19,
     color: Brand.textSecondary,
+    lineHeight: 20,
   },
-
-  empty: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingTop: 80,
-    gap: 12,
+  authCard: {
+    backgroundColor: Brand.surface,
+    borderRadius: 12,
+    padding: Spacing.four,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: Spacing.three,
+    borderWidth: 1,
+    borderColor: Brand.border,
   },
-  emptyText: {
-    fontSize: 15,
-    color: Brand.textMuted,
+  authCardIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: Brand.primarySoft,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  authCardTitle: {
+    fontWeight: "600",
+    fontSize: 16,
+    color: Brand.textPrimary,
+    marginBottom: Spacing.half,
+  },
+  authCardBody: {
+    color: Brand.textSecondary,
+    lineHeight: 18,
+  },
+  authButton: {
+    backgroundColor: Brand.primary,
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one + 2,
+    borderRadius: 99,
+  },
+  authButtonDestructive: {
+    backgroundColor: "#DC3545",
+  },
+  authButtonDisabled: {
+    opacity: 0.6,
+  },
+  authButtonText: {
+    color: "#fff",
+    fontWeight: "600",
   },
 });

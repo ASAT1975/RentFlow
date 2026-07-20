@@ -1,1 +1,2 @@
-export { DashboardScreen, DashboardScreen as default } from './DashboardScreen';
+export { default } from './TenantDashboardScreen';
+

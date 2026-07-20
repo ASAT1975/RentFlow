@@ -1,4 +1,3 @@
-import * as Notifications from "expo-notifications";
 import {
   createContext,
   useCallback,
@@ -7,7 +6,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { Platform } from "react-native";
 
 import { authApi, setAuthToken, type Role } from "@/api";
 
@@ -26,6 +24,7 @@ export type PendingSignup = {
   name: string;
   email: string;
   password: string;
+  phone?: string;
 };
 
 type AuthContextValue = {
@@ -65,40 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const registerForPushNotifications = useCallback(async () => {
-    // This function can be expanded to handle token refreshes, etc.
-    let token;
-    try {
-      if (Platform.OS === "android") {
-        await Notifications.setNotificationChannelAsync("default", {
-          name: "default",
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: "#FF231F7C",
-        });
-      }
-
-      const { status: existingStatus } =
-        await Notifications.getPermissionsAsync();
-      let finalStatus = existingStatus;
-
-      if (existingStatus !== "granted") {
-        const { status } = await Notifications.requestPermissionsAsync();
-        finalStatus = status;
-      }
-
-      if (finalStatus !== "granted") {
-        console.log("Push notification permission not granted.");
-        return;
-      }
-
-      token = (await Notifications.getExpoPushTokenAsync()).data;
-
-      // Send the token to your backend to store it against the user
-      await authApi.registerPushToken(token);
-      console.log("Push token registered with backend:", token);
-    } catch (error) {
-      console.error("Failed to register for push notifications:", error);
-    }
+    // Push notifications require a development build — not supported in Expo Go.
   }, []);
 
   const applySession = useCallback(
@@ -150,6 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         pendingSignup.email,
         pendingSignup.password,
         role,
+        pendingSignup.phone,
       );
       applySession(res.token, {
         name: res.name,

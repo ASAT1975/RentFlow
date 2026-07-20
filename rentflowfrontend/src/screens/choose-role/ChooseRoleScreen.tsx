@@ -57,7 +57,9 @@ export function ChooseRoleScreen() {
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : 'Could not create your account. Please try again.';
-      Alert.alert('Sign-up failed', message);
+      Alert.alert('Sign-up failed', message, [
+        { text: 'Go back', onPress: () => router.replace('/login') },
+      ]);
     } finally {
       setSubmitting(null);
     }

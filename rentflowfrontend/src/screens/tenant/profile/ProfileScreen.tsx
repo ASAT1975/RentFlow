@@ -1,5 +1,4 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Linking, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -8,7 +7,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { Brand } from '@/constants/brand';
-import { LANDLORD, PROPERTY, PROPERTY_PHOTO } from '@/constants/tenant-data';
 import { formatGhs, initialsOf } from '@/lib/format';
 import { useAuth } from '@/store/auth';
 import { useTenant } from '@/store/tenant';
@@ -36,7 +34,6 @@ function DetailRow({ icon, label, value, last }: DetailRowProps) {
 
 type StarsProps = { value: number; onChange?: (n: number) => void; size?: number };
 
-/** Five-star rating row. Read-only when `onChange` is omitted. */
 function Stars({ value, onChange, size = 20 }: StarsProps) {
   return (
     <View style={styles.starsRow}>
@@ -65,10 +62,6 @@ function Stars({ value, onChange, size = 20 }: StarsProps) {
   );
 }
 
-/**
- * Tenant — Profile. Personal details, the apartment being rented, a Help button
- * that surfaces the landlord's contact details, and a Rate & Review flow.
- */
 export function ProfileScreen() {
   const router = useRouter();
   const { user, signOut } = useAuth();
@@ -93,8 +86,10 @@ export function ProfileScreen() {
     setRateVisible(false);
   };
 
-  const call = () => Linking.openURL(`tel:${LANDLORD.phone.replace(/\s/g, '')}`).catch(() => {});
-  const email = () => Linking.openURL(`mailto:${LANDLORD.email}`).catch(() => {});
+  const call = () =>
+    Linking.openURL(`tel:${unit?.landlordPhone?.replace(/\s/g, '') ?? ''}`).catch(() => {});
+  const emailLandlord = () =>
+    Linking.openURL(`mailto:${unit?.landlordEmail ?? ''}`).catch(() => {});
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -140,7 +135,9 @@ export function ProfileScreen() {
             <Text style={styles.sectionTitle}>My Apartment</Text>
             <View style={styles.card}>
               <View style={styles.apartmentHeader}>
-                <Image source={PROPERTY_PHOTO} style={styles.apartmentThumb} contentFit="cover" />
+                <View style={[styles.apartmentThumb, { backgroundColor: Brand.primarySoft, alignItems: 'center', justifyContent: 'center' }]}>
+                  <Ionicons name="business" size={28} color={Brand.primary} />
+                </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.apartmentName}>{unit.property}</Text>
                   <Text style={styles.apartmentAddress}>Unit {unit.unitNumber}</Text>
@@ -187,7 +184,7 @@ export function ProfileScreen() {
                 </Pressable>
               </View>
               {review.trim().length > 0 ? (
-                <Text style={styles.reviewText}>“{review.trim()}”</Text>
+                <Text style={styles.reviewText}>"{review.trim()}"</Text>
               ) : null}
             </View>
           ) : (
@@ -241,11 +238,11 @@ export function ProfileScreen() {
 
               <View style={styles.landlordRow}>
                 <View style={styles.landlordAvatar}>
-                  <Text style={styles.landlordInitials}>JD</Text>
+                  <Text style={styles.landlordInitials}>{initialsOf(unit?.landlordName ?? 'LL')}</Text>
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.landlordName}>{LANDLORD.name}</Text>
-                  <Text style={styles.landlordRole}>Property Manager · {PROPERTY.name}</Text>
+                  <Text style={styles.landlordName}>{unit?.landlordName ?? 'Your Landlord'}</Text>
+                  <Text style={styles.landlordRole}>Property Manager · {unit?.property ?? '—'}</Text>
                 </View>
               </View>
 
@@ -255,20 +252,20 @@ export function ProfileScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.contactLabel}>Phone</Text>
-                  <Text style={styles.contactValue}>{LANDLORD.phone}</Text>
+                  <Text style={styles.contactValue}>{unit?.landlordPhone || 'Not available'}</Text>
                 </View>
                 <View style={[styles.contactAction, { backgroundColor: Brand.successSoft }]}>
                   <Text style={[styles.contactActionText, { color: Brand.success }]}>Call</Text>
                 </View>
               </Pressable>
 
-              <Pressable style={styles.contactRow} onPress={email} accessibilityRole="button">
+              <Pressable style={styles.contactRow} onPress={emailLandlord} accessibilityRole="button">
                 <View style={[styles.contactIcon, { backgroundColor: Brand.primarySoft }]}>
                   <Ionicons name="mail" size={18} color={Brand.primary} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={styles.contactLabel}>Email</Text>
-                  <Text style={styles.contactValue}>{LANDLORD.email}</Text>
+                  <Text style={styles.contactValue}>{unit?.landlordEmail ?? 'Not available'}</Text>
                 </View>
                 <View style={[styles.contactAction, { backgroundColor: Brand.primarySoft }]}>
                   <Text style={[styles.contactActionText, { color: Brand.primary }]}>Email</Text>
@@ -299,7 +296,9 @@ export function ProfileScreen() {
               </Pressable>
 
               <Text style={styles.sheetTitle}>Rate your apartment</Text>
-              <Text style={styles.sheetSubtitle}>How’s your experience at {PROPERTY.name}?</Text>
+              <Text style={styles.sheetSubtitle}>
+                How's your experience at {unit?.property ?? 'your property'}?
+              </Text>
 
               <View style={styles.sheetStars}>
                 <Stars value={rating} onChange={setRating} size={38} />

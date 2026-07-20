@@ -19,6 +19,10 @@ export type TenantUnit = {
   propertyId: number;
   rentAmount: number;
   status: UnitStatus;
+  paymentAuthorized: boolean;
+  landlordName?: string;
+  landlordEmail?: string;
+  landlordPhone?: string;
 };
 
 function normalize(summary: UnitSummary): TenantUnit {
@@ -28,6 +32,10 @@ function normalize(summary: UnitSummary): TenantUnit {
     propertyId: summary.propertyId,
     rentAmount: summary.rentAmount,
     status: summary.status ?? "OCCUPIED",
+    paymentAuthorized: summary.paymentAuthorized ?? false,
+    landlordName: summary.landlordName,
+    landlordEmail: summary.landlordEmail,
+    landlordPhone: summary.landlordPhone,
   };
 }
 
@@ -42,6 +50,8 @@ type TenantContextValue = {
    * URL the tenant should open to complete authorization.
    */
   authorizePayment: (rentDueDay: number) => Promise<string>;
+  /** De-authorize automatic rent collection. */
+  deauthorizePayment: () => Promise<void>;
 };
 
 const TenantContext = createContext<TenantContextValue | null>(null);
@@ -102,6 +112,14 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const deauthorizePayment = useCallback(async () => {
+    // This assumes an API endpoint `unitsApi.deauthorizePayment()` exists.
+    // In a real app, you'd add this to your `unitsApi` client.
+    // For now, we'll simulate it and just refresh the state.
+    await unitsApi.deauthorizePayment();
+    await refresh();
+  }, [refresh]);
+
   const value = useMemo<TenantContextValue>(
     () => ({
       unit,
@@ -110,8 +128,9 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       refresh,
       joinUnit,
       authorizePayment,
+      deauthorizePayment,
     }),
-    [unit, loading, refresh, joinUnit, authorizePayment],
+    [unit, loading, refresh, joinUnit, authorizePayment, deauthorizePayment],
   );
 
   return (

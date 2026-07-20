@@ -7,6 +7,8 @@ import org.springframework.web.client.RestTemplate;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 @Service
@@ -66,6 +68,9 @@ public class PaystackService {
 
     /** Validates the `x-paystack-signature` HMAC-SHA512 digest Paystack sends on webhooks. */
     public boolean verifyWebhookSignature(String payload, String signature) {
+        if (payload == null || payload.isBlank()) {
+            return false;
+        }
         if (signature == null || signature.isBlank()) {
             return false;
         }
@@ -80,7 +85,7 @@ public class PaystackService {
                 hex.append(String.format("%02x", b));
             }
             return hex.toString().equals(signature);
-        } catch (Exception e) {
+        } catch (NoSuchAlgorithmException | InvalidKeyException e) {
             return false;
         }
     }

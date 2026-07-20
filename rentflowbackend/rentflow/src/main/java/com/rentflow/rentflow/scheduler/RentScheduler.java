@@ -4,6 +4,8 @@ import com.rentflow.rentflow.model.*;
 import com.rentflow.rentflow.payment.PaystackService;
 import com.rentflow.rentflow.repository.PaymentRepository;
 import com.rentflow.rentflow.repository.UnitRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -13,6 +15,8 @@ import java.util.Map;
 
 @Component
 public class RentScheduler {
+
+    private static final Logger log = LoggerFactory.getLogger(RentScheduler.class);
 
     @Autowired
     private UnitRepository unitRepository;
@@ -71,8 +75,7 @@ public class RentScheduler {
 
                 paymentRepository.save(payment);
 
-            } catch (Exception e) {
-                // Log error, mark as overdue
+            } catch (RuntimeException e) {
                 Payment payment = new Payment();
                 payment.setTenant(unit.getTenant());
                 payment.setProperty(unit.getProperty());
@@ -82,9 +85,7 @@ public class RentScheduler {
                 payment.setDueDate(LocalDate.now());
                 payment.setStatus(PaymentStatus.OVERDUE);
                 paymentRepository.save(payment);
-
-                System.out.println("Failed to charge tenant: " +
-                        unit.getTenant().getEmail() + " - " + e.getMessage());
+                log.error("Failed to charge tenant for unit {}", unit.getId(), e);
             }
         }
     }

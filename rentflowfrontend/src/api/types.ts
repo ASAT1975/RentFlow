@@ -1,10 +1,10 @@
 /** Shapes returned by the RentFlow Spring Boot backend. */
 
-export type Role = 'LANDLORD' | 'TENANT';
-export type UnitStatus = 'VACANT' | 'OCCUPIED';
-export type MaintenanceStatus = 'PENDING' | 'IN_PROGRESS' | 'RESOLVED';
-export type PaymentStatus = 'PENDING' | 'PARTIAL' | 'PAID' | 'OVERDUE';
-export type ReviewType = 'TENANT_REVIEW' | 'LANDLORD_REVIEW';
+export type Role = "LANDLORD" | "TENANT";
+export type UnitStatus = "VACANT" | "OCCUPIED";
+export type MaintenanceStatus = "PENDING" | "IN_PROGRESS" | "RESOLVED";
+export type PaymentStatus = "PENDING" | "PARTIAL" | "PAID" | "OVERDUE";
+export type ReviewType = "TENANT_REVIEW" | "LANDLORD_REVIEW";
 
 /** `POST /api/auth/login` and `/register` response. */
 export type AuthResponse = {
@@ -19,7 +19,13 @@ export type AuthResponse = {
  * brand-new Google user.
  */
 export type GoogleAuthResponse =
-  | { token: string; role: Role; name: string; email: string; needsRole?: false }
+  | {
+      token: string;
+      role: Role;
+      name: string;
+      email: string;
+      needsRole?: false;
+    }
   | { needsRole: true; email: string; name: string; token?: undefined };
 
 /** `Property` entity, as serialized by `GET /api/properties/my`. */
@@ -78,6 +84,10 @@ export type UnitSummary = {
   propertyId: number;
   rentAmount: number;
   status?: UnitStatus;
+  paymentAuthorized?: boolean;
+  landlordName?: string;
+  landlordEmail?: string;
+  landlordPhone?: string;
 };
 
 /** `MaintenanceRequest` entity. Nested `tenant`/`property` appear on list endpoints. */

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.Map;
 
 @RestController
@@ -33,9 +34,10 @@ public class AuthController {
         String name = body.get("name");
         String email = body.get("email");
         String password = body.get("password");
-        Role role = Role.valueOf(body.get("role")); // "LANDLORD" or "TENANT"
+        String phone = body.get("phone");
+        Role role = Role.valueOf(body.get("role"));
 
-        User user = authService.register(name, email, password, role);
+        User user = authService.register(name, email, password, role, phone);
         String token = jwtUtil.generateToken(user.getEmail());
 
         return ResponseEntity.ok(Map.of(
@@ -72,7 +74,13 @@ public class AuthController {
             return ResponseEntity.status(400).body(Map.of("error", "Missing Google token"));
         }
 
-        GoogleTokenVerifier.GoogleUser googleUser = googleTokenVerifier.verify(accessToken);
+        GoogleTokenVerifier.GoogleUser googleUser;
+        try {
+            googleUser = googleTokenVerifier.verify(accessToken);
+        } catch (IOException | InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return ResponseEntity.status(500).body(Map.of("error", "Google verification failed"));
+        }
 
         User user = authService.findByEmailOptional(googleUser.email()).orElse(null);
 

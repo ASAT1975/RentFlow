@@ -166,7 +166,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     setLoading(true);
     setError(null);
     try {
-      const list = await propertiesApi.my();
+      const list = await propertiesApi.mine();
       const withUnits = await Promise.all(
         list.map(async (property) => {
           let units: Unit[] = [];

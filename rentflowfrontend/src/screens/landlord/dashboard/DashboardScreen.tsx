@@ -6,7 +6,6 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Brand } from '@/constants/brand';
-import { LANDLORD_ACTIVITY } from '@/constants/landlord-data';
 import { useAuth } from '@/store/auth';
 import { STATUS_LABEL, useMaintenance } from '@/store/maintenance';
 import { usePayments } from '@/store/payments';
@@ -51,10 +50,13 @@ export function DashboardScreen() {
   const { user } = useAuth();
   const { summary, loading, refresh } = usePortfolio();
   const { requests } = useMaintenance();
-  const { collected, expected } = usePayments();
+  const { payments, collected, expected } = usePayments();
 
   const openRequests = requests.filter((r) => r.status !== 'RESOLVED');
   const collectionRate = expected > 0 ? collected / expected : 0;
+  const recentPayments = [...payments]
+    .sort((a, b) => (b.paidDate ?? b.dueDate) > (a.paidDate ?? a.dueDate) ? 1 : -1)
+    .slice(0, 5);
 
   const stats: Stat[] = [
     { icon: 'business-outline', tint: Brand.primarySoft, color: Brand.primary, label: 'Properties', value: String(summary.properties) },
@@ -178,26 +180,34 @@ export function DashboardScreen() {
           )}
         </Animated.View>
 
-        {/* Recent activity */}
+        {/* Recent payments */}
         <Animated.View entering={FadeInDown.delay(320).duration(500)} style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <Text style={styles.sectionTitle}>Recent Payments</Text>
         </Animated.View>
         <Animated.View entering={FadeInDown.delay(360).duration(500)} style={styles.card}>
-          {LANDLORD_ACTIVITY.map((a, i) => (
-            <View key={`${a.title}-${i}`}>
-              {i > 0 && <View style={styles.divider} />}
-              <View style={styles.row}>
-                <View style={styles.emojiTile}>
-                  <Text style={styles.emoji}>{a.emoji}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.rowTitle}>{a.title}</Text>
-                  <Text style={styles.rowMeta}>{a.meta}</Text>
-                </View>
-                <Text style={styles.rowTime}>{a.time}</Text>
+          {recentPayments.length === 0 ? (
+            <View style={styles.row}>
+              <View style={styles.emojiTile}><Text style={styles.emoji}>💳</Text></View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.rowTitle}>No payments yet</Text>
+                <Text style={styles.rowMeta}>Payments will appear here once charged</Text>
               </View>
             </View>
-          ))}
+          ) : (
+            recentPayments.map((p, i) => (
+              <View key={p.id}>
+                {i > 0 && <View style={styles.divider} />}
+                <View style={styles.row}>
+                  <View style={styles.emojiTile}><Text style={styles.emoji}>💰</Text></View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.rowTitle}>{p.tenantName ?? 'Tenant'}</Text>
+                    <Text style={styles.rowMeta}>{p.propertyName ?? '—'} · {formatGhs(p.amountPaid)}</Text>
+                  </View>
+                  <Text style={styles.rowTime}>{p.paidDate ? new Date(p.paidDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : p.dueDate}</Text>
+                </View>
+              </View>
+            ))
+          )}
         </Animated.View>
       </ScrollView>
     </SafeAreaView>

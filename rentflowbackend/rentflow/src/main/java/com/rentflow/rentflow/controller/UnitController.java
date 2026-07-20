@@ -114,15 +114,35 @@ public class UnitController {
 
         User tenant = getCurrentUser(authHeader);
         RentUnit unit = unitService.getTenantUnit(tenant);
+        User landlord = unit.getProperty().getLandlord();
 
         return ResponseEntity.ok(Map.of(
                 "unitNumber", unit.getUnitNumber(),
                 "property", unit.getProperty().getName(),
                 "propertyId", unit.getProperty().getId(),
                 "rentAmount", unit.getRentAmount(),
-                "status", unit.getStatus()
+                "status", unit.getStatus(),
+                "paymentAuthorized", unit.getPaystackAuthCode() != null,
+                "landlordName", landlord.getName(),
+                "landlordEmail", landlord.getEmail(),
+                "landlordPhone", landlord.getPhone() != null ? landlord.getPhone() : ""
         ));
     }
+    // Tenant deauthorizes automatic rent payment
+    @PostMapping("/deauthorize-payment")
+    public ResponseEntity<?> deauthorizePayment(
+            @RequestHeader("Authorization") String authHeader) {
+
+        User tenant = getCurrentUser(authHeader);
+        RentUnit unit = unitService.getTenantUnit(tenant);
+        unit.setPaystackAuthCode(null);
+        unit.setPaystackEmail(null);
+        unit.setRentDueDay(null);
+        unitService.saveUnit(unit);
+
+        return ResponseEntity.ok(Map.of("message", "Automatic payments disabled"));
+    }
+
     // Tenant authorizes automatic rent payment
     @PostMapping("/authorize-payment")
     public ResponseEntity<?> authorizePayment(

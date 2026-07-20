@@ -5,6 +5,7 @@ import com.rentflow.rentflow.repository.UnitRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 
 @Service
@@ -22,7 +23,7 @@ public class UnitService {
         unit.setDescription(description);
         unit.setRentAmount(rentAmount);
         unit.setStatus(UnitStatus.VACANT);
-        unit.setInviteCode(UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+        unit.setInviteCode(UUID.randomUUID().toString().substring(0, 8).toUpperCase(Locale.ROOT));
         return unitRepository.save(unit);
     }
 

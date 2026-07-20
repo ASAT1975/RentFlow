@@ -19,12 +19,13 @@ public class AuthService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public User register(String name, String email, String password, Role role) {
+    public User register(String name, String email, String password, Role role, String phone) {
         User user = new User();
         user.setName(name);
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password)); // never store plain password!
+        user.setPassword(passwordEncoder.encode(password));
         user.setRole(role);
+        user.setPhone(phone);
         return userRepository.save(user);
     }
 

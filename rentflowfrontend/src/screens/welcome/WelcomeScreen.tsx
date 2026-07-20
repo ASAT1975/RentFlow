@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { type ImageSource, Image } from "expo-image";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -22,7 +22,6 @@ import { Brand } from "@/constants/brand";
 import { styles } from "./styles";
 
 const BUILDING = require("../../../assets/images/welcome-building.png");
-const GOOGLE_ICON = require("../../../assets/images/google-icon.png");
 
 /**
  * Welcome / onboarding screen — the first thing users see after the splash.
@@ -138,10 +137,7 @@ export function WelcomeScreen() {
             accessibilityRole="button"
             accessibilityLabel="Continue with Google"
           >
-            <Image
-              source={GOOGLE_ICON as ImageSource}
-              style={styles.socialIcon}
-            />
+            <MaterialCommunityIcons name="google" size={20} color="#4285F4" />
             <Text style={styles.socialButtonText}>Continue with Google</Text>
           </Pressable>
           <View style={styles.loginRow}>
