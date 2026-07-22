@@ -49,6 +49,16 @@ function extractMessage(body: unknown, status: number): string {
   return `Request failed with status ${status}`;
 }
 
+async function fetchWithTimeout(url: string, options: RequestInit, ms = 30000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = { Accept: 'application/json' };
   if (body !== undefined) headers['Content-Type'] = 'application/json';
@@ -56,16 +66,16 @@ async function request<T>(method: Method, path: string, body?: unknown): Promise
 
   let response: Response;
   try {
-    response = await fetch(`${API_URL}${path}`, {
-      method,
-      headers,
-      body: body !== undefined ? JSON.stringify(body) : undefined,
-    });
-  } catch {
-    throw new ApiError(
-      0,
-      'Cannot reach the server. Check your connection and that the backend is running.',
+    response = await fetchWithTimeout(
+      `${API_URL}${path}`,
+      { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined },
+      30000,
     );
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new ApiError(0, 'The server is waking up — please try again in a moment.');
+    }
+    throw new ApiError(0, 'Cannot reach the server. Check your internet connection.');
   }
 
   const parsed = parseBody(await response.text());

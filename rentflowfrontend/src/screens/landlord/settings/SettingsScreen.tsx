@@ -129,15 +129,7 @@ export function SettingsScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(160).duration(450)}>
-          <Text style={styles.sectionTitle}>Support</Text>
-          <View style={styles.card}>
-            <LinkRow icon="help-circle-outline" label="Help Center" />
-            <LinkRow icon="chatbubble-ellipses-outline" label="Contact Support" last />
-          </View>
-        </Animated.View>
-
-        <Animated.View entering={FadeInDown.delay(240).duration(450)} style={styles.signOut}>
+        <Animated.View entering={FadeInDown.delay(160).duration(450)} style={styles.signOut}>
           <PrimaryButton
             label="Log Out"
             variant="outline"

@@ -1,7 +1,9 @@
+import * as SecureStore from "expo-secure-store";
 import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -44,18 +46,34 @@ type AuthContextValue = {
    */
   signInWithGoogle: (accessToken: string) => Promise<GoogleSignInResult>;
   signOut: () => void;
+  updateUser: (patch: Partial<Pick<AuthUser, 'name'>>) => void;
 };
+
+const SESSION_KEY = "rentflow_session";
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/**
- * Holds the authenticated session (JWT + user) for the whole app. The token is
- * mirrored into the API client so every request is authenticated. Kept in memory
- * only for now — persisting across reloads (expo-secure-store) is a follow-up.
- */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Restore session on mount
+  useEffect(() => {
+    SecureStore.getItemAsync(SESSION_KEY)
+      .then((raw) => {
+        if (raw) {
+          const saved = JSON.parse(raw) as { token: string; user: AuthUser };
+          setToken(saved.token);
+          setUser(saved.user);
+          setAuthToken(saved.token);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setHydrated(true));
+  }, []);
+
+  if (!hydrated) return null;
   const [pendingSignup, setPendingSignup] = useState<PendingSignup | null>(
     null,
   );
@@ -72,9 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(nextToken);
       setUser(nextUser);
       setAuthToken(nextToken);
-
-      // Once the user is authenticated, register for push notifications.
-      // This won't re-prompt if permission is already granted.
+      void SecureStore.setItemAsync(SESSION_KEY, JSON.stringify({ token: nextToken, user: nextUser }));
       void registerForPushNotifications();
     },
     [registerForPushNotifications],
@@ -147,12 +163,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   );
 
+  const updateUser = useCallback((patch: Partial<Pick<AuthUser, 'name'>>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...patch };
+      if (token) void SecureStore.setItemAsync(SESSION_KEY, JSON.stringify({ token, user: updated }));
+      return updated;
+    });
+  }, [token]);
+
   const signOut = useCallback(() => {
     setToken(null);
     setUser(null);
     setPendingSignup(null);
     setPendingGoogleToken(null);
     setAuthToken(null);
+    void SecureStore.deleteItemAsync(SESSION_KEY);
   }, []);
 
   const value = useMemo<AuthContextValue>(
@@ -165,6 +191,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       completeSignup,
       signInWithGoogle,
       signOut,
+      updateUser,
     }),
     [
       user,
@@ -174,6 +201,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       completeSignup,
       signInWithGoogle,
       signOut,
+      updateUser,
     ],
   );
 

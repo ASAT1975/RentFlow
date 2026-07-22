@@ -29,6 +29,11 @@ public class AuthController {
     @Autowired
     private GoogleTokenVerifier googleTokenVerifier;
 
+    @GetMapping("/health")
+    public ResponseEntity<?> health() {
+        return ResponseEntity.ok(Map.of("status", "ok"));
+    }
+
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Map<String, String> body) {
         String name = body.get("name");

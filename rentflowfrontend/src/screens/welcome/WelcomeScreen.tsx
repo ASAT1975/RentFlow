@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand } from "@/constants/brand";
+import { useAuth } from "@/store/auth";
 
 import { styles } from "./styles";
 
@@ -31,14 +32,15 @@ const BUILDING = require("../../../assets/images/welcome-building.png");
  */
 export function WelcomeScreen() {
   const router = useRouter();
+  const { isAuthenticated, user } = useAuth();
 
-  const handleGoogleSignIn = () => {
-    // This is a placeholder for the actual Google Sign-In logic.
-    // You would typically use a library like @react-native-google-signin/google-signin
-    // or expo-auth-session/providers/google here.
-    console.log("Attempting Google Sign-In...");
-    // On success, you would navigate or update auth state.
-  };
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      router.replace(user.role === "LANDLORD" ? "/landlord/dashboard" : "/tenant/dashboard");
+    }
+  }, [isAuthenticated, user, router]);
+
+  const handleGoogleSignIn = () => router.push({ pathname: '/login', params: { mode: 'login', google: '1' } });
 
   // Gentle continuous float for the illustration.
   const float = useSharedValue(0);

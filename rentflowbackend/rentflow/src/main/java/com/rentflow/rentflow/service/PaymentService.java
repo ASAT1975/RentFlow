@@ -47,8 +47,36 @@ public class PaymentService {
         return paymentRepository.save(payment);
     }
 
-    // Tenant makes a payment
-    public Payment makePayment(Long paymentId, Double amount) {
+    // Tenant makes a payment — charges via Paystack if auth code is saved on the unit
+    public Payment makePaymentViaPaystack(Long paymentId, Double amount, User tenant,
+            com.rentflow.rentflow.repository.UnitRepository unitRepository) {
+        Payment payment = paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new RuntimeException("Payment not found"));
+
+        // Try Paystack charge if tenant has an authorization code
+        unitRepository.findByTenant(tenant).ifPresent(unit -> {
+            if (unit.getPaystackAuthCode() != null && unit.getPaystackEmail() != null) {
+                try {
+                    Map response = paystackService.chargeAuthorization(
+                            unit.getPaystackAuthCode(),
+                            unit.getPaystackEmail(),
+                            amount
+                    );
+                    Map data = (Map) response.get("data");
+                    if (data == null || !"success".equals(data.get("status"))) {
+                        throw new RuntimeException("Paystack charge did not succeed");
+                    }
+                } catch (RuntimeException e) {
+                    log.error("Paystack charge failed for tenant {}: {}", tenant.getEmail(), e.getMessage());
+                    throw e;
+                }
+            }
+        });
+
+        return makePayment(paymentId, amount);
+    }
+
+    // Tenant makes a payment (record only — used internally)
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 

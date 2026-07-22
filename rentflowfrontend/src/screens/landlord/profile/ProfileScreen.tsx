@@ -1,6 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -75,11 +76,25 @@ function LinkRow({ icon, label, onPress, last }: LinkRowProps) {
  */
 export function ProfileScreen() {
   const router = useRouter();
-  const { user, signOut } = useAuth();
+  const { user, signOut, updateUser } = useAuth();
   const { summary } = usePortfolio();
+  const [editVisible, setEditVisible] = useState(false);
+  const [editName, setEditName] = useState('');
 
   const name = user?.name ?? 'Landlord';
   const email = user?.email ?? '—';
+
+  const openEdit = () => {
+    setEditName(user?.name ?? '');
+    setEditVisible(true);
+  };
+
+  const saveEdit = () => {
+    const trimmed = editName.trim();
+    if (!trimmed) { Alert.alert('Name required', 'Please enter your name.'); return; }
+    updateUser({ name: trimmed });
+    setEditVisible(false);
+  };
 
   const logOut = () => {
     signOut();
@@ -153,14 +168,18 @@ export function ProfileScreen() {
         <Animated.View entering={FadeInDown.delay(200).duration(500)}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.card}>
-            <LinkRow icon="create-outline" label="Edit Profile" />
-            <LinkRow icon="card-outline" label="Payout Account" />
+            <LinkRow icon="create-outline" label="Edit Profile" onPress={openEdit} />
+            <LinkRow
+              icon="card-outline"
+              label="Payout Account"
+              onPress={() => Alert.alert('Coming Soon', 'Payout account setup will be available soon.')}
+            />
             <LinkRow
               icon="settings-outline"
               label="App Settings"
               onPress={() => router.push('/landlord/settings')}
+              last
             />
-            <LinkRow icon="help-circle-outline" label="Help & Support" last />
           </View>
         </Animated.View>
 
@@ -173,6 +192,32 @@ export function ProfileScreen() {
           />
         </Animated.View>
       </ScrollView>
+
+      {/* Edit Profile Modal */}
+      <Modal visible={editVisible} transparent animationType="fade" onRequestClose={() => setEditVisible(false)}>
+        <Pressable style={styles.modalOverlay} onPress={() => setEditVisible(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <Text style={styles.modalTitle}>Edit Profile</Text>
+            <Text style={styles.modalLabel}>Full Name</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={editName}
+              onChangeText={setEditName}
+              placeholder="Your name"
+              placeholderTextColor={Brand.textMuted}
+              autoFocus
+            />
+            <View style={styles.modalActions}>
+              <Pressable style={styles.modalCancel} onPress={() => setEditVisible(false)}>
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </Pressable>
+              <Pressable style={styles.modalSave} onPress={saveEdit}>
+                <Text style={styles.modalSaveText}>Save</Text>
+              </Pressable>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }

@@ -27,7 +27,7 @@ type Mode = "login" | "signup";
 
 export function LoginScreen() {
   const router = useRouter();
-  const { mode: modeParam } = useLocalSearchParams<{ mode?: string }>();
+  const { mode: modeParam, google: googleParam } = useLocalSearchParams<{ mode?: string; google?: string }>();
   const { signIn, beginSignup, signInWithGoogle } = useAuth();
   const [googleRequest, googleResponse, promptGoogle] =
     Google.useAuthRequest(googleConfig);
@@ -37,6 +37,7 @@ export function LoginScreen() {
   );
   const [form, setForm] = useState({ name: "", email: "", password: "", phone: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [signedUp, setSignedUp] = useState(false);
   const set = (key: keyof typeof form) => (value: string) =>
     setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -58,7 +59,8 @@ export function LoginScreen() {
 
     if (isSignup) {
       beginSignup({ name: form.name.trim(), email, password, phone: form.phone.trim() || undefined });
-      router.push("/choose-role");
+      setSignedUp(true);
+      setTimeout(() => router.push("/choose-role"), 2000);
       return;
     }
 
@@ -108,6 +110,11 @@ export function LoginScreen() {
   );
 
   useEffect(() => {
+    if (googleParam === '1' && googleRequest) void promptGoogle();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [googleParam, googleRequest]);
+
+  useEffect(() => {
     if (googleResponse?.type === "success") {
       const accessToken = googleResponse.authentication?.accessToken;
       if (accessToken) void handleGoogleToken(accessToken);
@@ -129,6 +136,18 @@ export function LoginScreen() {
     }
     void promptGoogle();
   };
+
+  if (signedUp) {
+    return (
+      <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
+        <Animated.View entering={FadeInDown.duration(400)} style={styles.successContainer}>
+          <Ionicons name="checkmark-circle" size={72} color={Brand.success} />
+          <Text style={styles.successTitle}>Account Created! 🎉</Text>
+          <Text style={styles.successSubtitle}>Welcome, {form.name.trim()}! Let's set up your role.</Text>
+        </Animated.View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
@@ -312,5 +331,23 @@ const styles = StyleSheet.create({
   },
   social: {
     gap: Spacing.three,
+  },
+  successContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    gap: Spacing.three,
+    padding: Spacing.four,
+  },
+  successTitle: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: Brand.textPrimary,
+    textAlign: "center",
+  },
+  successSubtitle: {
+    fontSize: 16,
+    color: Brand.textSecondary,
+    textAlign: "center",
   },
 });

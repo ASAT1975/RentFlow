@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/payments")
@@ -38,7 +39,33 @@ public class PaymentController {
         return authService.findByEmail(email);
     }
 
-    // Landlord creates rent due for a tenant
+    // Landlord charges rent to a tenant (called by frontend as /payments/charge)
+    @PostMapping("/charge")
+    public ResponseEntity<?> chargePayment(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody Map<String, Object> body) {
+
+        String tenantEmail = (String) body.get("tenantEmail");
+        Long propertyId = Long.valueOf(body.get("propertyId").toString());
+        Double totalAmount = Double.valueOf(body.get("totalAmount").toString());
+        LocalDate dueDate = LocalDate.parse((String) body.get("dueDate"));
+
+        User tenant = authService.findByEmail(tenantEmail);
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        Payment payment = paymentService.createPayment(tenant, property, totalAmount, dueDate);
+
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("id", payment.getId());
+        resp.put("totalAmount", payment.getTotalAmount());
+        resp.put("balance", payment.getBalance());
+        resp.put("status", payment.getStatus());
+        resp.put("dueDate", payment.getDueDate());
+        return ResponseEntity.ok(resp);
+    }
+
+    // Landlord creates rent due for a tenant (legacy)
     @PostMapping("/create")
     public ResponseEntity<?> createPayment(
             @RequestHeader("Authorization") String authHeader,
@@ -65,21 +92,23 @@ public class PaymentController {
         ));
     }
 
-    // Tenant makes a payment
+    // Tenant makes a payment — charges via Paystack if auth code exists
     @PostMapping("/pay/{paymentId}")
     public ResponseEntity<?> makePayment(
+            @RequestHeader("Authorization") String authHeader,
             @PathVariable Long paymentId,
             @RequestBody Map<String, Object> body) {
 
         Double amount = Double.valueOf(body.get("amount").toString());
-        Payment payment = paymentService.makePayment(paymentId, amount);
+        User tenant = getCurrentUser(authHeader);
+        Payment payment = paymentService.makePaymentViaPaystack(paymentId, amount, tenant, unitRepository);
 
-        return ResponseEntity.ok(Map.of(
-                "status", payment.getStatus(),
-                "amountPaid", payment.getAmountPaid(),
-                "balance", payment.getBalance(),
-                "totalAmount", payment.getTotalAmount()
-        ));
+        Map<String, Object> resp = new HashMap<>();
+        resp.put("status", payment.getStatus());
+        resp.put("amountPaid", payment.getAmountPaid());
+        resp.put("balance", payment.getBalance());
+        resp.put("totalAmount", payment.getTotalAmount());
+        return ResponseEntity.ok(resp);
     }
 
     // Landlord sees all payments for a property

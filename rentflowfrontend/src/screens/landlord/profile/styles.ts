@@ -223,4 +223,68 @@ export const styles = StyleSheet.create({
   signOut: {
     marginTop: 28,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: Brand.surface,
+    borderRadius: 20,
+    padding: 24,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: Brand.textPrimary,
+    marginBottom: 16,
+  },
+  modalLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Brand.textSecondary,
+    marginBottom: 6,
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: Brand.border,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    fontSize: 15,
+    color: Brand.textPrimary,
+    backgroundColor: Brand.background,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 20,
+  },
+  modalCancel: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Brand.border,
+  },
+  modalCancelText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Brand.textSecondary,
+  },
+  modalSave: {
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: Brand.primary,
+  },
+  modalSaveText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: Brand.onPrimary,
+  },
 });

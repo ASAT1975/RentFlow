@@ -1,15 +1,21 @@
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
 
-/**
- * This is a placeholder for the tenant dashboard. It currently just redirects
- * to the notifications screen, which serves as the main hub for tenants.
- */
+import { useTenant } from "@/store/tenant";
+
 export function TenantDashboardScreen() {
   const router = useRouter();
+  const { unit, loading } = useTenant();
+
   useEffect(() => {
-    router.replace("/tenant/notifications");
-  }, [router]);
+    if (loading) return;
+    if (unit) {
+      router.replace("/tenant/(tabs)/dashboard");
+    } else {
+      router.replace("/tenant/referral");
+    }
+  }, [loading, unit, router]);
+
   return null;
 }
 

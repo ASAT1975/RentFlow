@@ -70,34 +70,45 @@ export function NotificationsScreen() {
   const allNotifs: Notif[] = useMemo(() => {
     const notifs: Notif[] = [];
     for (const p of payments) {
-      if (p.status === 'PAID' && p.paidDate) {
+      if (p.status === "PAID" && p.paidDate) {
         notifs.push({
-          type: 'payments',
-          title: 'Payment Successful ✅',
+          type: "payments",
+          title: "Payment Successful ✅",
           body: `Your payment of ${formatGhs(p.amountPaid)} was successful.`,
-          time: new Date(p.paidDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+          time: new Date(p.paidDate).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "short",
+          }),
         });
-      } else if (p.status === 'OVERDUE') {
+      } else if (p.status === "OVERDUE") {
         notifs.push({
-          type: 'payments',
-          title: 'Rent Overdue ⚠️',
+          type: "payments",
+          title: "Rent Overdue ⚠️",
           body: `Your rent of ${formatGhs(p.totalAmount)} was due on ${p.dueDate}.`,
           time: p.dueDate,
         });
-      } else if (p.status === 'PENDING' || p.status === 'PARTIAL') {
+      } else if (p.status === "PENDING" || p.status === "PARTIAL") {
         notifs.push({
-          type: 'payments',
-          title: 'Rent Reminder 💰',
+          type: "payments",
+          title: "Rent Reminder 💰",
           body: `Your rent of ${formatGhs(p.balance)} is due on ${p.dueDate}.`,
           time: p.dueDate,
         });
       }
     }
     for (const r of requests) {
-      const statusLabel = r.status === 'RESOLVED' ? 'completed ✅' : r.status === 'IN_PROGRESS' ? 'in progress 🔧' : 'received';
+      const statusLabel =
+        r.status === "RESOLVED"
+          ? "completed ✅"
+          : r.status === "IN_PROGRESS"
+            ? "in progress 🔧"
+            : "received";
       notifs.push({
-        type: 'maintenance',
-        title: r.status === 'RESOLVED' ? 'Request Completed 🎉' : 'Maintenance Update 🔧',
+        type: "maintenance",
+        title:
+          r.status === "RESOLVED"
+            ? "Request Completed 🎉"
+            : "Maintenance Update 🔧",
         body: `Your request '${r.title}' has been ${statusLabel}.`,
         time: r.submittedDate,
       });
@@ -106,9 +117,10 @@ export function NotificationsScreen() {
   }, [payments, requests]);
 
   const groups = useMemo(() => {
-    const filtered = filter === 'all' ? allNotifs : allNotifs.filter((n) => n.type === filter);
+    const filtered =
+      filter === "all" ? allNotifs : allNotifs.filter((n) => n.type === filter);
     if (filtered.length === 0) return [];
-    return [{ label: 'Activity', items: filtered }];
+    return [{ label: "Activity", items: filtered }];
   }, [allNotifs, filter]);
 
   const onAuthorize = useCallback(async () => {
