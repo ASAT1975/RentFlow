@@ -36,11 +36,14 @@ export function WelcomeScreen() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      router.replace(user.role === "LANDLORD" ? "/landlord/dashboard" : "/tenant/dashboard");
+      router.replace(
+        user.role === "LANDLORD" ? "/landlord/dashboard" : "/tenant/dashboard",
+      );
     }
   }, [isAuthenticated, user, router]);
 
-  const handleGoogleSignIn = () => router.push({ pathname: '/login', params: { mode: 'login', google: '1' } });
+  const handleGoogleSignIn = () =>
+    router.push({ pathname: "/login", params: { mode: "login", google: "1" } });
 
   // Gentle continuous float for the illustration.
   const float = useSharedValue(0);
