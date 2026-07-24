@@ -82,6 +82,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
+    cursor: 'pointer',
   },
   primary: { backgroundColor: Brand.primary },
   secondary: { backgroundColor: Brand.primarySoft },

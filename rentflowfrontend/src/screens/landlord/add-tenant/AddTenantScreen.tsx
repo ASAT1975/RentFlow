@@ -1,17 +1,17 @@
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import Animated, { FadeIn, FadeInDown } from "react-native-reanimated";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { BackButton } from '@/components/ui/back-button';
-import { PrimaryButton } from '@/components/ui/primary-button';
-import { TextField } from '@/components/ui/text-field';
-import { Brand } from '@/constants/brand';
-import { usePortfolio } from '@/store/portfolio';
+import { BackButton } from "@/components/ui/back-button";
+import { PrimaryButton } from "@/components/ui/primary-button";
+import { TextField } from "@/components/ui/text-field";
+import { Brand } from "@/constants/brand";
+import { usePortfolio } from "@/store/portfolio";
 
-import { styles } from './styles';
+import { styles } from "./styles";
 
 /**
  * Landlord — Add New Tenant. Pushed from the Tenants tab "+" button. Captures
@@ -21,26 +21,40 @@ import { styles } from './styles';
 export function AddTenantScreen() {
   const router = useRouter();
   const { properties, addTenant } = usePortfolio();
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [propertyId, setPropertyId] = useState<string | null>(properties[0]?.id ?? null);
-  const [unit, setUnit] = useState('');
-  const [rent, setRent] = useState('');
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [propertyId, setPropertyId] = useState<string | null>(
+    properties[0]?.id ?? null,
+  );
+  const [unit, setUnit] = useState("");
+  const [rent, setRent] = useState("");
 
   const property = properties.find((p) => p.id === propertyId);
-  const canContinue = name.trim().length > 0 && !!property && unit.trim().length > 0;
+  const rentAmount = parseFloat(rent);
+  const canContinue =
+    name.trim().length > 0 &&
+    !!property &&
+    unit.trim().length > 0 &&
+    rent.trim().length > 0 &&
+    !isNaN(rentAmount) &&
+    rentAmount > 0;
 
   const generateCode = () => {
     if (!canContinue || !property) return;
     addTenant({ name, property: property.name, unit, rent });
     router.push({
-      pathname: '/landlord/tenant-code',
-      params: { name: name.trim(), property: property.name, unit: unit.trim() },
+      pathname: "/landlord/tenant-code",
+      params: {
+        name: name.trim(),
+        property: property.name,
+        unit: unit.trim(),
+        rent,
+      },
     });
   };
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
+    <SafeAreaView style={styles.safeArea} edges={["top", "bottom"]}>
       <View style={styles.header}>
         <BackButton />
         <Text style={styles.headerTitle}>Add Tenant</Text>
@@ -51,7 +65,8 @@ export function AddTenantScreen() {
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}>
+        showsVerticalScrollIndicator={false}
+      >
         <Animated.View entering={FadeIn.duration(400)}>
           <View style={styles.heroIcon}>
             <Ionicons name="person-add" size={24} color={Brand.primary} />
@@ -89,7 +104,8 @@ export function AddTenantScreen() {
                   onPress={() => setPropertyId(p.id)}
                   accessibilityRole="button"
                   accessibilityState={{ selected: on }}
-                  style={[styles.chip, on && styles.chipOn]}>
+                  style={[styles.chip, on && styles.chipOn]}
+                >
                   <Text style={[styles.chipText, on && styles.chipTextOn]}>
                     {p.emoji} {p.name}
                   </Text>
@@ -117,11 +133,20 @@ export function AddTenantScreen() {
           </View>
         </Animated.View>
 
-        <Animated.View entering={FadeInDown.delay(160).duration(500)} style={styles.footer}>
+        <Animated.View
+          entering={FadeInDown.delay(160).duration(500)}
+          style={styles.footer}
+        >
           <PrimaryButton
             label="Generate Referral Code"
             disabled={!canContinue}
-            leading={<Ionicons name="qr-code-outline" size={19} color={Brand.onPrimary} />}
+            leading={
+              <Ionicons
+                name="qr-code-outline"
+                size={19}
+                color={Brand.onPrimary}
+              />
+            }
             onPress={generateCode}
           />
         </Animated.View>
