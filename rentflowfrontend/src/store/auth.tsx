@@ -46,7 +46,7 @@ type AuthContextValue = {
    */
   signInWithGoogle: (accessToken: string) => Promise<GoogleSignInResult>;
   signOut: () => void;
-  updateUser: (patch: Partial<Pick<AuthUser, 'name'>>) => void;
+  updateUser: (patch: Partial<Pick<AuthUser, "name">>) => void;
 };
 
 const SESSION_KEY = "rentflow_session";
@@ -73,7 +73,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setHydrated(true));
   }, []);
 
-  if (!hydrated) return null;
   const [pendingSignup, setPendingSignup] = useState<PendingSignup | null>(
     null,
   );
@@ -90,7 +89,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setToken(nextToken);
       setUser(nextUser);
       setAuthToken(nextToken);
-      void SecureStore.setItemAsync(SESSION_KEY, JSON.stringify({ token: nextToken, user: nextUser }));
+      void SecureStore.setItemAsync(
+        SESSION_KEY,
+        JSON.stringify({ token: nextToken, user: nextUser }),
+      );
       void registerForPushNotifications();
     },
     [registerForPushNotifications],
@@ -163,14 +165,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [applySession],
   );
 
-  const updateUser = useCallback((patch: Partial<Pick<AuthUser, 'name'>>) => {
-    setUser((prev) => {
-      if (!prev) return prev;
-      const updated = { ...prev, ...patch };
-      if (token) void SecureStore.setItemAsync(SESSION_KEY, JSON.stringify({ token, user: updated }));
-      return updated;
-    });
-  }, [token]);
+  const updateUser = useCallback(
+    (patch: Partial<Pick<AuthUser, "name">>) => {
+      setUser((prev) => {
+        if (!prev) return prev;
+        const updated = { ...prev, ...patch };
+        if (token)
+          void SecureStore.setItemAsync(
+            SESSION_KEY,
+            JSON.stringify({ token, user: updated }),
+          );
+        return updated;
+      });
+    },
+    [token],
+  );
 
   const signOut = useCallback(() => {
     setToken(null);
@@ -205,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ],
   );
 
+  if (!hydrated) return null;
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
