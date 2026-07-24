@@ -1,38 +1,44 @@
 package com.rentflow.rentflow.service;
 
-import com.rentflow.rentflow.model.*;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.rentflow.rentflow.model.Payment;
+import com.rentflow.rentflow.model.PaymentStatus;
+import com.rentflow.rentflow.model.Property;
+import com.rentflow.rentflow.model.User;
 import com.rentflow.rentflow.payment.PaystackService;
 import com.rentflow.rentflow.repository.PaymentRepository;
 import com.rentflow.rentflow.repository.PropertyRepository;
 import com.rentflow.rentflow.repository.UnitRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Map;
 
 @Service
 public class PaymentService {
 
     private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
 
-    @Autowired
-    private PaymentRepository paymentRepository;
+    private final PaymentRepository paymentRepository;
+    private final PropertyRepository propertyRepository;
+    private final UnitRepository unitRepository;
+    private final PaystackService paystackService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    private PropertyRepository propertyRepository;
-
-    @Autowired
-    private UnitRepository unitRepository;
-
-    @Autowired
-    private PaystackService paystackService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    public PaymentService(PaymentRepository paymentRepository, PropertyRepository propertyRepository, UnitRepository unitRepository, PaystackService paystackService, ObjectMapper objectMapper) {
+        this.paymentRepository = paymentRepository;
+        this.propertyRepository = propertyRepository;
+        this.unitRepository = unitRepository;
+        this.paystackService = paystackService;
+        this.objectMapper = objectMapper;
+    }
 
     // Landlord creates a rent due for a tenant
     public Payment createPayment(User tenant, Property property, Double totalAmount, LocalDate dueDate) {
@@ -48,8 +54,7 @@ public class PaymentService {
     }
 
     // Tenant makes a payment — charges via Paystack if auth code is saved on the unit
-    public Payment makePaymentViaPaystack(Long paymentId, Double amount, User tenant,
-            com.rentflow.rentflow.repository.UnitRepository unitRepository) {
+    public Payment makePaymentViaPaystack(Long paymentId, Double amount, User tenant) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 
@@ -77,6 +82,7 @@ public class PaymentService {
     }
 
     // Tenant makes a payment (record only — used internally)
+    public Payment makePayment(Long paymentId, Double amount) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 
