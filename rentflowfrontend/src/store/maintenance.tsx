@@ -94,7 +94,13 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
       if (role === "LANDLORD") {
         const lists = await Promise.all(
           propertyIds.map((id) =>
-            maintenanceApi.forProperty(id).catch(() => []),
+            maintenanceApi.forProperty(id).catch((err) => {
+              console.error(
+                `Failed to fetch maintenance requests for property ${id}:`,
+                err,
+              );
+              return [];
+            }),
           ),
         );
         const freshRequests = lists.flat().map(toItem);

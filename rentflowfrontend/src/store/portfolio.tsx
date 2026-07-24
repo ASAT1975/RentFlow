@@ -6,19 +6,22 @@ import {
   useMemo,
   useState,
   type ReactNode,
-} from 'react';
+} from "react";
 
-import { propertiesApi, unitsApi, type Property, type Unit } from '@/api';
-import { type LandlordProperty, type LandlordTenant } from '@/constants/landlord-data';
-import { useAuth } from '@/store/auth';
+import { propertiesApi, unitsApi, type Property, type Unit } from "@/api";
+import {
+  type LandlordProperty,
+  type LandlordTenant,
+} from "@/constants/landlord-data";
+import { useAuth } from "@/store/auth";
 
 function slugify(value: string) {
   return (
     value
       .trim()
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || 'item'
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "item"
   );
 }
 
@@ -28,31 +31,37 @@ function initials(name: string) {
       .trim()
       .split(/\s+/)
       .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase() ?? '')
-      .join('') || '?'
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("") || "?"
   );
 }
 
 /** "GH₵ 6,000" → 6000 */
 function parseAmount(value: string) {
-  const n = parseInt(value.replace(/[^0-9]/g, ''), 10);
+  const n = parseInt(value.replace(/[^0-9]/g, ""), 10);
   return Number.isFinite(n) ? n : 0;
 }
 
 /** 6600 → "GH₵ 6,600" (manual grouping; Hermes has no full Intl). */
 function formatGhs(n: number) {
-  return `GH₵ ${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+  return `GH₵ ${n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
 }
 
 /** Map a backend property + its units into the shape the landlord UI renders. */
-function toLandlordProperty(property: Property, units: Unit[]): LandlordProperty {
-  const occupiedUnits = units.filter((u) => u.status === 'OCCUPIED');
-  const revenue = occupiedUnits.reduce((sum, u) => sum + (u.rentAmount ?? 0), 0);
+function toLandlordProperty(
+  property: Property,
+  units: Unit[],
+): LandlordProperty {
+  const occupiedUnits = units.filter((u) => u.status === "OCCUPIED");
+  const revenue = occupiedUnits.reduce(
+    (sum, u) => sum + (u.rentAmount ?? 0),
+    0,
+  );
   return {
     id: String(property.id),
     backendId: property.id,
     inviteCode: property.inviteCode,
-    emoji: '🏢',
+    emoji: "🏢",
     name: property.name,
     location: property.address,
     units: units.length,
@@ -64,7 +73,7 @@ function toLandlordProperty(property: Property, units: Unit[]): LandlordProperty
 
 /** Build a tenant row from an occupied unit that has a tenant attached. */
 function toLandlordTenant(property: Property, unit: Unit): LandlordTenant {
-  const name = unit.tenant?.name ?? 'Tenant';
+  const name = unit.tenant?.name ?? "Tenant";
   return {
     id: `unit-${unit.id}`,
     initials: initials(name),
@@ -72,7 +81,7 @@ function toLandlordTenant(property: Property, unit: Unit): LandlordTenant {
     property: property.name,
     unit: unit.unitNumber,
     // Rent status comes from the payments feed (wired later); default to Due.
-    status: 'Due',
+    status: "Due",
     amount: formatGhs(unit.rentAmount ?? 0),
     tenantEmail: unit.tenant?.email,
     propertyId: property.id,
@@ -152,14 +161,16 @@ const PortfolioContext = createContext<PortfolioContextValue | null>(null);
  */
 export function PortfolioProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, user } = useAuth();
-  const isLandlord = user?.role === 'LANDLORD';
+  const isLandlord = user?.role === "LANDLORD";
 
   const [properties, setProperties] = useState<LandlordProperty[]>([]);
   const [tenants, setTenants] = useState<LandlordTenant[]>([]);
   const [summary, setSummary] = useState<PortfolioSummary>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [setupProperty, setSetupProperty] = useState<SetupProperty | null>(null);
+  const [setupProperty, setSetupProperty] = useState<SetupProperty | null>(
+    null,
+  );
 
   const refresh = useCallback(async () => {
     if (!isAuthenticated || !isLandlord) return;
@@ -172,8 +183,12 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
           let units: Unit[] = [];
           try {
             units = await unitsApi.forProperty(property.id);
-          } catch {
-            // Non-fatal: show the property with zero units if the lookup fails.
+          } catch (err) {
+            // Log the error for debugging, but allow the app to continue.
+            console.error(
+              `Failed to fetch units for property ${property.id}:`,
+              err,
+            );
           }
           return { property, units };
         }),
@@ -184,17 +199,20 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       );
       const mappedTenants = withUnits.flatMap(({ property, units }) =>
         units
-          .filter((u) => u.status === 'OCCUPIED' && u.tenant)
+          .filter((u) => u.status === "OCCUPIED" && u.tenant)
           .map((u) => toLandlordTenant(property, u)),
       );
 
       const totalUnits = mappedProperties.reduce((n, p) => n + p.units, 0);
-      const totalOccupied = mappedProperties.reduce((n, p) => n + p.occupied, 0);
+      const totalOccupied = mappedProperties.reduce(
+        (n, p) => n + p.occupied,
+        0,
+      );
       const monthlyRevenue = withUnits.reduce(
         (sum, { units }) =>
           sum +
           units
-            .filter((u) => u.status === 'OCCUPIED')
+            .filter((u) => u.status === "OCCUPIED")
             .reduce((s, u) => s + (u.rentAmount ?? 0), 0),
         0,
       );
@@ -209,7 +227,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         monthlyRevenue: formatGhs(monthlyRevenue),
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load properties');
+      setError(
+        err instanceof Error ? err.message : "Failed to load properties",
+      );
     } finally {
       setLoading(false);
     }
@@ -249,7 +269,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
   const createUnit = useCallback(
     async (input: NewRoomInput): Promise<Unit> => {
       if (!setupProperty) {
-        throw new Error('No property selected. Please set up a property first.');
+        throw new Error(
+          "No property selected. Please set up a property first.",
+        );
       }
       const unit = await unitsApi.create(
         setupProperty.id,
@@ -272,7 +294,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       name: input.name.trim(),
       property: input.property,
       unit: input.unit.trim(),
-      status: 'Due',
+      status: "Due",
       amount: formatGhs(parseAmount(input.rent)),
     };
     setTenants((prev) => [tenant, ...prev]);
@@ -305,11 +327,16 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     ],
   );
 
-  return <PortfolioContext.Provider value={value}>{children}</PortfolioContext.Provider>;
+  return (
+    <PortfolioContext.Provider value={value}>
+      {children}
+    </PortfolioContext.Provider>
+  );
 }
 
 export function usePortfolio() {
   const ctx = useContext(PortfolioContext);
-  if (!ctx) throw new Error('usePortfolio must be used within a PortfolioProvider');
+  if (!ctx)
+    throw new Error("usePortfolio must be used within a PortfolioProvider");
   return ctx;
 }
