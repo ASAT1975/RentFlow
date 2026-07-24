@@ -64,19 +64,24 @@ async function request<T>(method: Method, path: string, body?: unknown): Promise
   if (body !== undefined) headers['Content-Type'] = 'application/json';
   if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
+  const fullUrl = `${API_URL}${path}`;
+  console.log('[API]', method, fullUrl);
+
   let response: Response;
   try {
     response = await fetchWithTimeout(
-      `${API_URL}${path}`,
+      fullUrl,
       { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined },
       30000,
     );
   } catch (err) {
+    console.log('[API] fetch error:', err);
     if (err instanceof Error && err.name === 'AbortError') {
       throw new ApiError(0, 'The server is waking up — please try again in a moment.');
     }
-    throw new ApiError(0, 'Cannot reach the server. Check your internet connection.');
+    throw new ApiError(0, `Cannot reach the server. Check your internet connection. (${fullUrl})`);
   }
+  console.log('[API] status:', response.status);
 
   const parsed = parseBody(await response.text());
   if (!response.ok) {

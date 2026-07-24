@@ -1,5 +1,4 @@
-import Constants from 'expo-constants';
-
+import Constants from "expo-constants";
 /**
  * Resolves the RentFlow backend base URL.
  *
@@ -16,17 +15,22 @@ import Constants from 'expo-constants';
  */
 function resolveBaseUrl(): string {
   const override = process.env.EXPO_PUBLIC_API_URL;
-  if (override) {
-    return override.replace(/\/+$/, '');
+  if (override?.startsWith("http")) {
+    return override.replace(/\/+$/, "");
   }
 
-  const hostUri = Constants.expoConfig?.hostUri;
-  const host = hostUri?.split('://').pop()?.split(':')[0];
-  if (host) {
-    return `http://${host}:8080`;
+  if (__DEV__) {
+    // In development, derive from hostUri to connect on the local network.
+    const hostUri = Constants.expoConfig?.hostUri;
+    if (hostUri) {
+      const lanIp = hostUri.split(":")[0];
+      // Assumes the backend is running on port 8080.
+      return `http://${lanIp}:8080`;
+    }
+    // Fallback for web or simulators on the same machine.
+    return "http://localhost:8080";
   }
-
-  return 'http://localhost:8080';
+  return "https://rentflow-7qo8.onrender.com"; // Production fallback
 }
 
 /** Root server URL, e.g. `http://192.168.1.5:8080`. */
