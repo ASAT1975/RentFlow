@@ -22,9 +22,7 @@ public class SecurityConfig {
                 // CSRF disabled only for the Paystack webhook endpoint which is
                 // protected by HMAC-SHA512 signature verification instead.
                 // All other endpoints use stateless JWT auth so CSRF is not applicable.
-                .csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/api/payments/webhook")
-                        .disable())
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
