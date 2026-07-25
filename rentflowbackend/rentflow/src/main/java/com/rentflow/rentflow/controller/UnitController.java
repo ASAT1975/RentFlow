@@ -92,7 +92,23 @@ public class UnitController {
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
         List<RentUnit> units = unitService.getPropertyUnits(property);
-        return ResponseEntity.ok(units);
+        return ResponseEntity.ok(units.stream().map(u -> {
+            Map<String, Object> dto = new java.util.HashMap<>();
+            dto.put("id", u.getId());
+            dto.put("unitNumber", u.getUnitNumber());
+            dto.put("description", u.getDescription());
+            dto.put("rentAmount", u.getRentAmount());
+            dto.put("inviteCode", u.getInviteCode());
+            dto.put("status", u.getStatus());
+            if (u.getTenant() != null) {
+                dto.put("tenant", Map.of(
+                        "id", u.getTenant().getId(),
+                        "name", u.getTenant().getName(),
+                        "email", u.getTenant().getEmail()
+                ));
+            }
+            return dto;
+        }).toList());
     }
 
     // Landlord sees vacant units
@@ -104,7 +120,14 @@ public class UnitController {
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
         List<RentUnit> units = unitService.getVacantUnits(property);
-        return ResponseEntity.ok(units);
+        return ResponseEntity.ok(units.stream().map(u -> Map.of(
+                "id", u.getId(),
+                "unitNumber", u.getUnitNumber(),
+                "description", u.getDescription() != null ? u.getDescription() : "",
+                "rentAmount", u.getRentAmount(),
+                "inviteCode", u.getInviteCode(),
+                "status", u.getStatus()
+        )).toList());
     }
 
     // Tenant sees their own unit
