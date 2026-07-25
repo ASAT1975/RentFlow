@@ -40,15 +40,16 @@ function initials(name: string) {
  */
 export function TenantCodeScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams<{ name?: string; property?: string; unit?: string }>();
+  const params = useLocalSearchParams<{ name?: string; property?: string; unit?: string; inviteCode?: string }>();
   const name = params.name?.trim() || 'your tenant';
   const property = params.property?.trim() || 'your property';
   const unit = params.unit?.trim();
   const firstName = name.split(/\s+/)[0];
 
-  // Generated once when the screen mounts so it stays stable across re-renders.
-  const [code] = useState(makeCode);
-  const [copied, setCopied] = useState(false);
+  // Use the real unit invite code from the backend; fall back to a generated one
+  // only if somehow not provided (e.g. navigated directly in dev).
+  const [fallbackCode] = useState(makeCode);
+  const code = params.inviteCode?.trim() || fallbackCode;
 
   const shareMessage = `Hi ${firstName}! Join ${property} on RentFlow with my referral code: ${code}`;
 

@@ -79,7 +79,9 @@ public class UnitController {
                 "unit", unit.getUnitNumber(),
                 "property", unit.getProperty().getName(),
                 "propertyId", unit.getProperty().getId(),
-                "rentAmount", unit.getRentAmount()
+                "rentAmount", unit.getRentAmount(),
+                "status", unit.getStatus(),
+                "paymentAuthorized", unit.getPaystackAuthCode() != null
         ));
     }
 

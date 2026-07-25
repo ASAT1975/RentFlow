@@ -120,7 +120,21 @@ public class PaymentController {
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
         List<Payment> payments = paymentService.getPropertyPayments(property);
-        return ResponseEntity.ok(payments);
+        return ResponseEntity.ok(payments.stream().map(p -> {
+            Map<String, Object> dto = new HashMap<>();
+            dto.put("id", p.getId());
+            dto.put("totalAmount", p.getTotalAmount());
+            dto.put("amountPaid", p.getAmountPaid());
+            dto.put("balance", p.getBalance());
+            dto.put("status", p.getStatus());
+            dto.put("dueDate", p.getDueDate());
+            dto.put("paidDate", p.getPaidDate());
+            if (p.getTenant() != null)
+                dto.put("tenant", Map.of("id", p.getTenant().getId(), "name", p.getTenant().getName(), "email", p.getTenant().getEmail()));
+            if (p.getProperty() != null)
+                dto.put("property", Map.of("id", p.getProperty().getId(), "name", p.getProperty().getName()));
+            return dto;
+        }).toList());
     }
 
     // Tenant sees their own payments
@@ -130,7 +144,21 @@ public class PaymentController {
 
         User tenant = getCurrentUser(authHeader);
         List<Payment> payments = paymentService.getTenantPayments(tenant);
-        return ResponseEntity.ok(payments);
+        return ResponseEntity.ok(payments.stream().map(p -> {
+            Map<String, Object> dto = new HashMap<>();
+            dto.put("id", p.getId());
+            dto.put("totalAmount", p.getTotalAmount());
+            dto.put("amountPaid", p.getAmountPaid());
+            dto.put("balance", p.getBalance());
+            dto.put("status", p.getStatus());
+            dto.put("dueDate", p.getDueDate());
+            dto.put("paidDate", p.getPaidDate());
+            if (p.getTenant() != null)
+                dto.put("tenant", Map.of("id", p.getTenant().getId(), "name", p.getTenant().getName(), "email", p.getTenant().getEmail()));
+            if (p.getProperty() != null)
+                dto.put("property", Map.of("id", p.getProperty().getId(), "name", p.getProperty().getName()));
+            return dto;
+        }).toList());
     }
 
     /**

@@ -84,7 +84,19 @@ public class MaintenanceController {
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
         List<MaintenanceRequest> requests = maintenanceService.getPropertyRequests(property);
-        return ResponseEntity.ok(requests);
+        return ResponseEntity.ok(requests.stream().map(r -> {
+            Map<String, Object> dto = new java.util.HashMap<>();
+            dto.put("id", r.getId());
+            dto.put("title", r.getTitle());
+            dto.put("description", r.getDescription());
+            dto.put("status", r.getStatus());
+            dto.put("submittedDate", r.getSubmittedDate());
+            if (r.getTenant() != null)
+                dto.put("tenant", Map.of("id", r.getTenant().getId(), "name", r.getTenant().getName(), "email", r.getTenant().getEmail()));
+            if (r.getProperty() != null)
+                dto.put("property", Map.of("id", r.getProperty().getId(), "name", r.getProperty().getName()));
+            return dto;
+        }).toList());
     }
 
     // Tenant sees their own requests
@@ -94,6 +106,18 @@ public class MaintenanceController {
 
         User tenant = getCurrentUser(authHeader);
         List<MaintenanceRequest> requests = maintenanceService.getTenantRequests(tenant);
-        return ResponseEntity.ok(requests);
+        return ResponseEntity.ok(requests.stream().map(r -> {
+            Map<String, Object> dto = new java.util.HashMap<>();
+            dto.put("id", r.getId());
+            dto.put("title", r.getTitle());
+            dto.put("description", r.getDescription());
+            dto.put("status", r.getStatus());
+            dto.put("submittedDate", r.getSubmittedDate());
+            if (r.getTenant() != null)
+                dto.put("tenant", Map.of("id", r.getTenant().getId(), "name", r.getTenant().getName(), "email", r.getTenant().getEmail()));
+            if (r.getProperty() != null)
+                dto.put("property", Map.of("id", r.getProperty().getId(), "name", r.getProperty().getName()));
+            return dto;
+        }).toList());
     }
 }

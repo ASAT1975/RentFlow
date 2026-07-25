@@ -65,8 +65,9 @@ export function ReferralScreen() {
             value={code}
             onChangeText={(t) => setCode(t.toUpperCase())}
             placeholder="RF-7K9X2L"
-            autoCapitalize="characters"
+            autoCapitalize="none"
             autoCorrect={false}
+            spellCheck={false}
             containerStyle={styles.field}
             rightSlot={
               <Pressable

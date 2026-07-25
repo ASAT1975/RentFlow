@@ -137,6 +137,8 @@ export type SetupProperty = {
 type PortfolioContextValue = {
   properties: LandlordProperty[];
   tenants: LandlordTenant[];
+  /** All units keyed by propertyId — used to look up invite codes. */
+  unitsByProperty: Record<number, Unit[]>;
   summary: PortfolioSummary;
   loading: boolean;
   error: string | null;
@@ -165,6 +167,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
   const [properties, setProperties] = useState<LandlordProperty[]>([]);
   const [tenants, setTenants] = useState<LandlordTenant[]>([]);
+  const [unitsByProperty, setUnitsByProperty] = useState<Record<number, Unit[]>>({});
   const [summary, setSummary] = useState<PortfolioSummary>(EMPTY_SUMMARY);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -219,6 +222,9 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
 
       setProperties(mappedProperties);
       setTenants(mappedTenants);
+      setUnitsByProperty(
+        Object.fromEntries(withUnits.map(({ property, units }) => [property.id, units])),
+      );
       setSummary({
         properties: mappedProperties.length,
         units: totalUnits,
@@ -242,6 +248,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     } else {
       setProperties([]);
       setTenants([]);
+      setUnitsByProperty({});
       setSummary(EMPTY_SUMMARY);
       setSetupProperty(null);
     }
@@ -304,6 +311,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     () => ({
       properties,
       tenants,
+      unitsByProperty,
       summary,
       loading,
       error,
@@ -316,6 +324,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     [
       properties,
       tenants,
+      unitsByProperty,
       summary,
       loading,
       error,

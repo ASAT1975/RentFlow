@@ -54,12 +54,12 @@ public class PaymentService {
     }
 
     // Tenant makes a payment — charges via Paystack if auth code is saved on the unit
-    public Payment makePaymentViaPaystack(Long paymentId, Double amount, User tenant) {
+    public Payment makePaymentViaPaystack(Long paymentId, Double amount, User tenant, UnitRepository unitRepo) {
         Payment payment = paymentRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found"));
 
         // Try Paystack charge if tenant has an authorization code
-        unitRepository.findByTenant(tenant).ifPresent(unit -> {
+        unitRepo.findByTenant(tenant).ifPresent(unit -> {
             if (unit.getPaystackAuthCode() != null && unit.getPaystackEmail() != null) {
                 try {
                     Map response = paystackService.chargeAuthorization(

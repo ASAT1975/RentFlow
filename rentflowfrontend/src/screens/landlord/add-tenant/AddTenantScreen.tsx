@@ -13,42 +13,33 @@ import { usePortfolio } from "@/store/portfolio";
 
 import { styles } from "./styles";
 
-/**
- * Landlord — Add New Tenant. Pushed from the Tenants tab "+" button. Captures
- * the new tenant's details and which property/unit they're joining, then hands
- * off to the referral-code screen so the landlord can share an invite.
- */
 export function AddTenantScreen() {
   const router = useRouter();
-  const { properties, addTenant } = usePortfolio();
+  const { properties, unitsByProperty } = usePortfolio();
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [propertyId, setPropertyId] = useState<string | null>(
     properties[0]?.id ?? null,
   );
-  const [unit, setUnit] = useState("");
-  const [rent, setRent] = useState("");
 
   const property = properties.find((p) => p.id === propertyId);
-  const rentAmount = parseFloat(rent);
-  const canContinue =
-    name.trim().length > 0 &&
-    !!property &&
-    unit.trim().length > 0 &&
-    rent.trim().length > 0 &&
-    !isNaN(rentAmount) &&
-    rentAmount > 0;
+  const vacantUnits = property?.backendId
+    ? (unitsByProperty[property.backendId] ?? []).filter((u) => u.status === "VACANT")
+    : [];
+  const [selectedUnitId, setSelectedUnitId] = useState<number | null>(null);
+  const selectedUnit = vacantUnits.find((u) => u.id === selectedUnitId) ?? null;
+
+  const canContinue = name.trim().length > 0 && !!property && !!selectedUnit;
 
   const generateCode = () => {
-    if (!canContinue || !property) return;
-    addTenant({ name, property: property.name, unit, rent });
+    if (!canContinue || !property || !selectedUnit) return;
     router.push({
       pathname: "/landlord/tenant-code",
       params: {
         name: name.trim(),
         property: property.name,
-        unit: unit.trim(),
-        rent,
+        unit: selectedUnit.unitNumber,
+        inviteCode: selectedUnit.inviteCode ?? "",
       },
     });
   };
@@ -114,23 +105,31 @@ export function AddTenantScreen() {
             })}
           </View>
 
-          <View style={styles.row}>
-            <TextField
-              label="Unit"
-              value={unit}
-              onChangeText={setUnit}
-              placeholder="B3"
-              containerStyle={styles.rowField}
-            />
-            <TextField
-              label="Monthly Rent (GH₵)"
-              value={rent}
-              onChangeText={setRent}
-              placeholder="600"
-              keyboardType="number-pad"
-              containerStyle={styles.rowField}
-            />
-          </View>
+          <Text style={styles.label}>Vacant Unit</Text>
+          {vacantUnits.length === 0 ? (
+            <Text style={[styles.chipText, { marginBottom: 12 }]}>
+              No vacant units for this property.
+            </Text>
+          ) : (
+            <View style={styles.chips}>
+              {vacantUnits.map((u) => {
+                const on = u.id === selectedUnitId;
+                return (
+                  <Pressable
+                    key={u.id}
+                    onPress={() => setSelectedUnitId(u.id)}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: on }}
+                    style={[styles.chip, on && styles.chipOn]}
+                  >
+                    <Text style={[styles.chipText, on && styles.chipTextOn]}>
+                      {u.unitNumber}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          )}
         </Animated.View>
 
         <Animated.View

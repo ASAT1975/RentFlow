@@ -75,12 +75,14 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
   const [payments, setPayments] = useState<PaymentItem[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const propertyIdsKey = properties.map((p) => p.backendId).join(",");
   const propertyIds = useMemo(
     () =>
       properties
         .map((p) => p.backendId)
         .filter((id): id is number => typeof id === "number"),
-    [properties],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [propertyIdsKey],
   );
 
   const refresh = useCallback(async () => {
