@@ -29,15 +29,14 @@ public class PaymentService {
     private final PropertyRepository propertyRepository;
     private final UnitRepository unitRepository;
     private final PaystackService paystackService;
-    private final ObjectMapper objectMapper;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
-    public PaymentService(PaymentRepository paymentRepository, PropertyRepository propertyRepository, UnitRepository unitRepository, PaystackService paystackService, ObjectMapper objectMapper) {
+    public PaymentService(PaymentRepository paymentRepository, PropertyRepository propertyRepository, UnitRepository unitRepository, PaystackService paystackService) {
         this.paymentRepository = paymentRepository;
         this.propertyRepository = propertyRepository;
         this.unitRepository = unitRepository;
         this.paystackService = paystackService;
-        this.objectMapper = objectMapper;
     }
 
     // Landlord creates a rent due for a tenant
