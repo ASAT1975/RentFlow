@@ -1,3 +1,8 @@
+# AI assistant files
+.claude/
+CLAUDE.md
+AGENTS.md
+
 # Node / React Native / Expo
 node_modules/
 .expo/
