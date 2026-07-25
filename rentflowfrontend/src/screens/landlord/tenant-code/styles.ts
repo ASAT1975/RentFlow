@@ -75,12 +75,14 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: 'rgba(255,255,255,0.85)',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
   },
   code: {
-    marginTop: 8,
-    fontSize: 32,
+    marginTop: 10,
+    fontSize: 34,
     fontWeight: '800',
-    letterSpacing: 3,
+    letterSpacing: 6,
     color: Brand.onHero,
   },
   codeActions: {

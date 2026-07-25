@@ -32,6 +32,9 @@ public class UnitController {
     private UnitService unitService;
 
     private User getCurrentUser(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
         String token = authHeader.substring(7);
         String email = jwtUtil.extractEmail(token);
         return authService.findByEmail(email);
@@ -40,8 +43,13 @@ public class UnitController {
     // Landlord adds a unit to a property
     @PostMapping("/create")
     public ResponseEntity<?> createUnit(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Object> body) {
+
+        User landlord = getCurrentUser(authHeader);
+        if (landlord.getRole() != com.rentflow.rentflow.model.Role.LANDLORD) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only landlords can create units"));
+        }
 
         Long propertyId = Long.valueOf(body.get("propertyId").toString());
         String unitNumber = (String) body.get("unitNumber");
@@ -50,6 +58,10 @@ public class UnitController {
 
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (!property.getLandlord().getId().equals(landlord.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "You do not own this property"));
+        }
 
         RentUnit unit = unitService.createUnit(property, unitNumber, description, rentAmount);
 
@@ -66,10 +78,13 @@ public class UnitController {
     // Tenant joins a unit with invite code
     @PostMapping("/join")
     public ResponseEntity<?> joinUnit(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, String> body) {
 
         User tenant = getCurrentUser(authHeader);
+        if (tenant.getRole() != com.rentflow.rentflow.model.Role.TENANT) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only tenants can join units"));
+        }
         String inviteCode = body.get("inviteCode");
 
         RentUnit unit = unitService.joinUnit(inviteCode, tenant);
@@ -88,7 +103,13 @@ public class UnitController {
     // Landlord sees all units for a property
     @GetMapping("/property/{propertyId}")
     public ResponseEntity<?> getPropertyUnits(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Long propertyId) {
+
+        User caller = getCurrentUser(authHeader);
+        if (caller.getRole() != com.rentflow.rentflow.model.Role.LANDLORD) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only landlords can view property units"));
+        }
 
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
@@ -116,7 +137,13 @@ public class UnitController {
     // Landlord sees vacant units
     @GetMapping("/property/{propertyId}/vacant")
     public ResponseEntity<?> getVacantUnits(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Long propertyId) {
+
+        User caller = getCurrentUser(authHeader);
+        if (caller.getRole() != com.rentflow.rentflow.model.Role.LANDLORD) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only landlords can view vacant units"));
+        }
 
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
@@ -135,7 +162,7 @@ public class UnitController {
     // Tenant sees their own unit
     @GetMapping("/my")
     public ResponseEntity<?> getMyUnit(
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
         User tenant = getCurrentUser(authHeader);
         RentUnit unit = unitService.getTenantUnit(tenant);
@@ -156,7 +183,7 @@ public class UnitController {
     // Tenant deauthorizes automatic rent payment
     @PostMapping("/deauthorize-payment")
     public ResponseEntity<?> deauthorizePayment(
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
         User tenant = getCurrentUser(authHeader);
         RentUnit unit = unitService.getTenantUnit(tenant);
@@ -171,7 +198,7 @@ public class UnitController {
     // Tenant authorizes automatic rent payment
     @PostMapping("/authorize-payment")
     public ResponseEntity<?> authorizePayment(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Object> body) {
 
         User tenant = getCurrentUser(authHeader);

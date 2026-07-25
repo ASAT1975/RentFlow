@@ -32,17 +32,14 @@ public class RentScheduler {
     public void collectRent() {
         int today = LocalDate.now().getDayOfMonth();
 
-        // Get all occupied units
-        List<RentUnit> allUnits = unitRepository.findAll();
+        // Only fetch occupied units that have a Paystack auth code and a due day set
+        List<RentUnit> dueUnits = unitRepository
+                .findByStatusAndPaystackAuthCodeIsNotNullAndRentDueDayIsNotNull(UnitStatus.OCCUPIED)
+                .stream()
+                .filter(u -> u.getRentDueDay() == today)
+                .toList();
 
-        for (RentUnit unit : allUnits) {
-            // Skip vacant units or units without auth code
-            if (unit.getStatus() != UnitStatus.OCCUPIED) continue;
-            if (unit.getPaystackAuthCode() == null) continue;
-            if (unit.getRentDueDay() == null) continue;
-
-            // Check if today is rent due day for this unit
-            if (unit.getRentDueDay() != today) continue;
+        for (RentUnit unit : dueUnits) {
 
             try {
                 // Charge tenant automatically

@@ -5,7 +5,7 @@ import { Brand } from '@/constants/brand';
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Brand.surface,
+    backgroundColor: Brand.background,
   },
 
   // Pushed-screen header: back · title · spacer.

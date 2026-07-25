@@ -14,4 +14,6 @@ public interface UnitRepository extends JpaRepository<RentUnit, Long> {
     List<RentUnit> findByPropertyAndStatus(Property property,
                                            com.rentflow.rentflow.model.UnitStatus status);
     Optional<RentUnit> findByPaystackEmail(String paystackEmail);
+    List<RentUnit> findByStatusAndPaystackAuthCodeIsNotNullAndRentDueDayIsNotNull(
+            com.rentflow.rentflow.model.UnitStatus status);
 }

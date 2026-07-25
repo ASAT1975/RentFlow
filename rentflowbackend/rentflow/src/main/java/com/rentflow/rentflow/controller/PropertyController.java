@@ -24,8 +24,10 @@ public class PropertyController {
     @Autowired
     private JwtUtil jwtUtil;
 
-    // Helper to get logged in user from token
     private User getCurrentUser(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
         String token = authHeader.substring(7);
         String email = jwtUtil.extractEmail(token);
         return authService.findByEmail(email);
@@ -34,7 +36,7 @@ public class PropertyController {
     // Landlord creates a property
     @PostMapping("/create")
     public ResponseEntity<?> createProperty(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Object> body) {
 
         User landlord = getCurrentUser(authHeader);
@@ -56,17 +58,23 @@ public class PropertyController {
     // Landlord sees all their properties
     @GetMapping("/my")
     public ResponseEntity<?> getMyProperties(
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
         User landlord = getCurrentUser(authHeader);
         List<Property> properties = propertyService.getLandlordProperties(landlord);
-        return ResponseEntity.ok(properties);
+        return ResponseEntity.ok(properties.stream().map(p -> Map.of(
+                "id", p.getId(),
+                "name", p.getName(),
+                "address", p.getAddress(),
+                "rentAmount", p.getRentAmount(),
+                "inviteCode", p.getInviteCode() != null ? p.getInviteCode() : ""
+        )).toList());
     }
 
     // Tenant joins property with invite code
     @PostMapping("/join")
     public ResponseEntity<?> joinProperty(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, String> body) {
 
         String code = body.get("inviteCode");

@@ -23,7 +23,7 @@ const RENT_DUE_DAYS = Array.from({ length: 28 }, (_, i) => i + 1);
  */
 export function AuthorizePaymentScreen() {
   const router = useRouter();
-  const { unit, authorizePayment } = useTenant();
+  const { unit, authorizePayment, refresh } = useTenant();
   const [rentDueDay, setRentDueDay] = useState(1);
   const [authorizing, setAuthorizing] = useState(false);
 
@@ -33,7 +33,9 @@ export function AuthorizePaymentScreen() {
     try {
       const url = await authorizePayment(rentDueDay);
       await WebBrowser.openBrowserAsync(url);
-      router.replace('/tenant/dashboard');
+      // Refresh so paymentAuthorized reflects the webhook update
+      await refresh();
+      router.replace('/tenant/(tabs)/dashboard');
     } catch (err) {
       Alert.alert(
         'Authorization failed',
@@ -46,7 +48,7 @@ export function AuthorizePaymentScreen() {
     }
   };
 
-  const skip = () => router.replace('/tenant/dashboard');
+  const skip = () => router.replace('/tenant/(tabs)/dashboard');
 
   return (
     <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>

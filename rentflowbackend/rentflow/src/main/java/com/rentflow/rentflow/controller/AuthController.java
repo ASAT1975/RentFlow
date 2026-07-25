@@ -40,7 +40,17 @@ public class AuthController {
         String email = body.get("email");
         String password = body.get("password");
         String phone = body.get("phone");
-        Role role = Role.valueOf(body.get("role"));
+        String roleStr = body.get("role");
+        Role role;
+        try {
+            role = Role.valueOf(roleStr);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return ResponseEntity.status(400).body(Map.of("error", "Invalid role. Must be LANDLORD or TENANT"));
+        }
+
+        if (authService.findByEmailOptional(email).isPresent()) {
+            return ResponseEntity.status(409).body(Map.of("error", "An account with this email already exists."));
+        }
 
         User user = authService.register(name, email, password, role, phone);
         String token = jwtUtil.generateToken(user.getEmail());
@@ -57,10 +67,10 @@ public class AuthController {
         String email = body.get("email");
         String password = body.get("password");
 
-        User user = authService.findByEmail(email);
-
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            return ResponseEntity.status(401).body(Map.of("error", "Wrong password"));
+        // Use optional lookup so unknown emails return 401, not 500
+        User user = authService.findByEmailOptional(email).orElse(null);
+        if (user == null || !passwordEncoder.matches(password, user.getPassword())) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid email or password"));
         }
 
         String token = jwtUtil.generateToken(email);
@@ -99,7 +109,13 @@ public class AuthController {
         }
 
         if (user == null) {
-            Role role = Role.valueOf(body.get("role")); // "LANDLORD" or "TENANT"
+            String roleStr = body.get("role");
+            Role role;
+            try {
+                role = Role.valueOf(roleStr);
+            } catch (IllegalArgumentException | NullPointerException e) {
+                return ResponseEntity.status(400).body(Map.of("error", "Invalid role. Must be LANDLORD or TENANT"));
+            }
             user = authService.createGoogleUser(googleUser.name(), googleUser.email(), role);
         }
 

@@ -55,7 +55,11 @@ export function DashboardScreen() {
   const openRequests = requests.filter((r) => r.status !== 'RESOLVED');
   const collectionRate = expected > 0 ? collected / expected : 0;
   const recentPayments = [...payments]
-    .sort((a, b) => (b.paidDate ?? b.dueDate) > (a.paidDate ?? a.dueDate) ? 1 : -1)
+    .sort((a, b) => {
+      const da = b.paidDate ?? b.dueDate;
+      const db = a.paidDate ?? a.dueDate;
+      return da > db ? 1 : da < db ? -1 : 0;
+    })
     .slice(0, 5);
 
   const stats: Stat[] = [

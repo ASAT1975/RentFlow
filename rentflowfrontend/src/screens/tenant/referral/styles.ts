@@ -5,7 +5,7 @@ import { Brand } from '@/constants/brand';
 export const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: Brand.surface,
+    backgroundColor: Brand.background,
   },
   scroll: {
     flex: 1,
@@ -13,13 +13,13 @@ export const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 4,
-    paddingBottom: 24,
+    paddingTop: 8,
+    paddingBottom: 32,
   },
 
   title: {
-    marginTop: 8,
-    fontSize: 26,
+    marginTop: 12,
+    fontSize: 28,
     fontWeight: '800',
     color: Brand.textPrimary,
   },
@@ -37,6 +37,7 @@ export const styles = StyleSheet.create({
   scanButton: {
     alignItems: 'center',
     justifyContent: 'center',
+    padding: 4,
   },
 
   helpCard: {
@@ -47,6 +48,8 @@ export const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     backgroundColor: Brand.surfaceAlt,
+    borderWidth: 1,
+    borderColor: Brand.border,
   },
   helpIcon: {
     width: 36,

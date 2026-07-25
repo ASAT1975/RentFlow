@@ -17,7 +17,6 @@ export function AddTenantScreen() {
   const router = useRouter();
   const { properties, unitsByProperty } = usePortfolio();
   const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
   const [propertyId, setPropertyId] = useState<string | null>(
     properties[0]?.id ?? null,
   );
@@ -76,15 +75,6 @@ export function AddTenantScreen() {
             placeholder="e.g. Adwoa Mensah"
             containerStyle={styles.field}
           />
-          <TextField
-            label="Phone Number"
-            value={phone}
-            onChangeText={setPhone}
-            placeholder="+233 24 000 0000"
-            keyboardType="phone-pad"
-            containerStyle={styles.field}
-          />
-
           <Text style={styles.label}>Property</Text>
           <View style={styles.chips}>
             {properties.map((p) => {

@@ -68,7 +68,7 @@ export function LoginScreen() {
     try {
       const role = await signIn(email, password);
       router.replace(
-        role === "LANDLORD" ? "/landlord/dashboard" : "/tenant/dashboard",
+        role === "LANDLORD" ? "/landlord/(tabs)/dashboard" : "/tenant/(tabs)/dashboard",
       );
     } catch (err) {
       const message =
@@ -92,8 +92,8 @@ export function LoginScreen() {
         } else {
           router.replace(
             result.role === "LANDLORD"
-              ? "/landlord/dashboard"
-              : "/tenant/dashboard",
+              ? "/landlord/(tabs)/dashboard"
+              : "/tenant/(tabs)/dashboard",
           );
         }
       } catch (err) {

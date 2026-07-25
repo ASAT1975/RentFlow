@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
@@ -23,6 +24,11 @@ export function ReferralScreen() {
   const { joinUnit } = useTenant();
   const [code, setCode] = useState('');
   const [verifying, setVerifying] = useState(false);
+
+  const pasteFromClipboard = async () => {
+    const text = await Clipboard.getStringAsync();
+    if (text?.trim()) setCode(text.trim().toUpperCase());
+  };
 
   const verify = async () => {
     const trimmed = code.trim();
@@ -56,7 +62,7 @@ export function ReferralScreen() {
 
         <Animated.View entering={FadeInDown.delay(60).duration(500)}>
           <Text style={styles.title}>Enter Referral Code</Text>
-          <Text style={styles.subtitle}>Enter the code provided by your landlord</Text>
+          <Text style={styles.subtitle}>Paste or type the code your landlord shared with you</Text>
         </Animated.View>
 
         <Animated.View entering={FadeInDown.delay(140).duration(500)}>
@@ -64,8 +70,8 @@ export function ReferralScreen() {
             label="Referral Code"
             value={code}
             onChangeText={(t) => setCode(t.toUpperCase())}
-            placeholder="RF-7K9X2L"
-            autoCapitalize="none"
+            placeholder="e.g. A1B2C3D4"
+            autoCapitalize="characters"
             autoCorrect={false}
             spellCheck={false}
             containerStyle={styles.field}
@@ -74,8 +80,9 @@ export function ReferralScreen() {
                 style={styles.scanButton}
                 hitSlop={8}
                 accessibilityRole="button"
-                accessibilityLabel="Scan referral code">
-                <Ionicons name="scan-outline" size={22} color={Brand.primary} />
+                accessibilityLabel="Paste referral code"
+                onPress={pasteFromClipboard}>
+                <Ionicons name="clipboard-outline" size={22} color={Brand.primary} />
               </Pressable>
             }
           />

@@ -34,6 +34,9 @@ public class PaymentController {
     private UnitRepository unitRepository;
 
     private User getCurrentUser(String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("Missing or invalid Authorization header");
+        }
         String token = authHeader.substring(7);
         String email = jwtUtil.extractEmail(token);
         return authService.findByEmail(email);
@@ -42,8 +45,13 @@ public class PaymentController {
     // Landlord charges rent to a tenant (called by frontend as /payments/charge)
     @PostMapping("/charge")
     public ResponseEntity<?> chargePayment(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Object> body) {
+
+        User caller = getCurrentUser(authHeader);
+        if (caller.getRole() != com.rentflow.rentflow.model.Role.LANDLORD) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only landlords can charge rent"));
+        }
 
         String tenantEmail = (String) body.get("tenantEmail");
         Long propertyId = Long.valueOf(body.get("propertyId").toString());
@@ -53,6 +61,10 @@ public class PaymentController {
         User tenant = authService.findByEmail(tenantEmail);
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (!property.getLandlord().getId().equals(caller.getId())) {
+            return ResponseEntity.status(403).body(Map.of("error", "You do not own this property"));
+        }
 
         Payment payment = paymentService.createPayment(tenant, property, totalAmount, dueDate);
 
@@ -68,8 +80,13 @@ public class PaymentController {
     // Landlord creates rent due for a tenant (legacy)
     @PostMapping("/create")
     public ResponseEntity<?> createPayment(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @RequestBody Map<String, Object> body) {
+
+        User caller = getCurrentUser(authHeader);
+        if (caller.getRole() != com.rentflow.rentflow.model.Role.LANDLORD) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only landlords can create payments"));
+        }
 
         String tenantEmail = (String) body.get("tenantEmail");
         Long propertyId = Long.valueOf(body.get("propertyId").toString());
@@ -95,7 +112,7 @@ public class PaymentController {
     // Tenant makes a payment — charges via Paystack if auth code exists
     @PostMapping("/pay/{paymentId}")
     public ResponseEntity<?> makePayment(
-            @RequestHeader("Authorization") String authHeader,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Long paymentId,
             @RequestBody Map<String, Object> body) {
 
@@ -114,7 +131,13 @@ public class PaymentController {
     // Landlord sees all payments for a property
     @GetMapping("/property/{propertyId}")
     public ResponseEntity<?> getPropertyPayments(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
             @PathVariable Long propertyId) {
+
+        User caller = getCurrentUser(authHeader);
+        if (caller.getRole() != com.rentflow.rentflow.model.Role.LANDLORD) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only landlords can view property payments"));
+        }
 
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
@@ -140,7 +163,7 @@ public class PaymentController {
     // Tenant sees their own payments
     @GetMapping("/my")
     public ResponseEntity<?> getMyPayments(
-            @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
         User tenant = getCurrentUser(authHeader);
         List<Payment> payments = paymentService.getTenantPayments(tenant);

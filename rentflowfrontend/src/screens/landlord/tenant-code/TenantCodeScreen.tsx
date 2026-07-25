@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
@@ -50,8 +51,15 @@ export function TenantCodeScreen() {
   // only if somehow not provided (e.g. navigated directly in dev).
   const [fallbackCode] = useState(makeCode);
   const code = params.inviteCode?.trim() || fallbackCode;
+  const [copied, setCopied] = useState(false);
 
   const shareMessage = `Hi ${firstName}! Join ${property} on RentFlow with my referral code: ${code}`;
+
+  const onCopy = async () => {
+    await Clipboard.setStringAsync(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
 
   const onShare = () => {
     Share.share({ message: shareMessage }).catch(() => {});
@@ -89,28 +97,33 @@ export function TenantCodeScreen() {
             style={styles.codeCard}>
             <Text style={styles.codeLabel}>Referral Code</Text>
             <Text style={styles.code}>{code}</Text>
-            <View style={styles.codeActions}>
-              <Pressable
-                onPress={() => setCopied(true)}
-                accessibilityRole="button"
-                accessibilityLabel="Copy code"
-                style={styles.codeBtn}>
-                <Ionicons
-                  name={copied ? 'checkmark' : 'copy-outline'}
-                  size={16}
-                  color={Brand.primary}
-                />
-                <Text style={styles.codeBtnText}>{copied ? 'Copied' : 'Copy'}</Text>
-              </Pressable>
-              <Pressable
-                onPress={onShare}
-                accessibilityRole="button"
-                accessibilityLabel="Share code"
-                style={styles.codeBtn}>
-                <Ionicons name="share-social-outline" size={16} color={Brand.primary} />
-                <Text style={styles.codeBtnText}>Share</Text>
-              </Pressable>
-            </View>
+            {copied ? (
+              <View style={[styles.codeActions, { marginTop: 14 }]}>
+                <View style={[styles.codeBtn, { backgroundColor: Brand.successSoft }]}>
+                  <Ionicons name="checkmark" size={16} color={Brand.success} />
+                  <Text style={[styles.codeBtnText, { color: Brand.success }]}>Copied!</Text>
+                </View>
+              </View>
+            ) : (
+              <View style={styles.codeActions}>
+                <Pressable
+                  onPress={onCopy}
+                  accessibilityRole="button"
+                  accessibilityLabel="Copy code"
+                  style={styles.codeBtn}>
+                  <Ionicons name="copy-outline" size={16} color={Brand.primary} />
+                  <Text style={styles.codeBtnText}>Copy</Text>
+                </Pressable>
+                <Pressable
+                  onPress={onShare}
+                  accessibilityRole="button"
+                  accessibilityLabel="Share code"
+                  style={styles.codeBtn}>
+                  <Ionicons name="share-social-outline" size={16} color={Brand.primary} />
+                  <Text style={styles.codeBtnText}>Share</Text>
+                </Pressable>
+              </View>
+            )}
           </LinearGradient>
         </Animated.View>
 

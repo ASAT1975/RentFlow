@@ -136,11 +136,18 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
     [refresh],
   );
 
-  const outstanding = payments
-    .filter((p) => p.status !== "PAID")
-    .reduce((sum, p) => sum + Math.max(0, p.balance), 0);
-  const collected = payments.reduce((sum, p) => sum + p.amountPaid, 0);
-  const expected = payments.reduce((sum, p) => sum + p.totalAmount, 0);
+  const outstanding = useMemo(
+    () => payments.filter((p) => p.status !== "PAID").reduce((sum, p) => sum + Math.max(0, p.balance), 0),
+    [payments],
+  );
+  const collected = useMemo(
+    () => payments.reduce((sum, p) => sum + p.amountPaid, 0),
+    [payments],
+  );
+  const expected = useMemo(
+    () => payments.reduce((sum, p) => sum + p.totalAmount, 0),
+    [payments],
+  );
 
   const value = useMemo<PaymentsContextValue>(
     () => ({

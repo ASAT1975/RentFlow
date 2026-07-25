@@ -88,7 +88,11 @@ export function VerifyScreen() {
         <Animated.View entering={FadeInDown.delay(240).duration(500)} style={styles.footer}>
           <PrimaryButton
             label="Confirm & Continue"
-            onPress={() => router.replace('/tenant/authorize-payment')}
+            onPress={() =>
+              unit?.paymentAuthorized
+                ? router.replace('/tenant/(tabs)/dashboard')
+                : router.replace('/tenant/authorize-payment')
+            }
           />
           <PrimaryButton
             label="This isn't my property"

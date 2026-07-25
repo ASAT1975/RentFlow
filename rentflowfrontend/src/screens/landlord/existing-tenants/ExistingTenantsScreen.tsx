@@ -1,8 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Share, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, Layout } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -39,9 +40,21 @@ export function ExistingTenantsScreen() {
 
   const referralCode = setupProperty?.inviteCode ?? '—';
   const canAdd = name.trim().length > 0 && unit.trim().length > 0;
+
+  const onCopy = async () => {
+    if (referralCode === '—') return;
+    await Clipboard.setStringAsync(referralCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const onShare = () => {
+    if (referralCode === '—') return;
+    Share.share({ message: `Join my property on RentFlow with this referral code: ${referralCode}` }).catch(() => {});
+  };
   const finish = () => {
     void refresh();
-    router.replace('/landlord/dashboard');
+    router.replace('/landlord/(tabs)/dashboard');
   };
 
   const addPerson = () => {
@@ -86,17 +99,13 @@ export function ExistingTenantsScreen() {
             <Text style={styles.code}>{referralCode}</Text>
             <View style={styles.codeActions}>
               <Pressable
-                onPress={() => setCopied(true)}
+                onPress={onCopy}
                 accessibilityRole="button"
                 style={styles.codeBtn}>
-                <Ionicons
-                  name={copied ? 'checkmark' : 'copy-outline'}
-                  size={16}
-                  color={Brand.primary}
-                />
-                <Text style={styles.codeBtnText}>{copied ? 'Copied' : 'Copy'}</Text>
+                <Ionicons name={copied ? 'checkmark' : 'copy-outline'} size={16} color={copied ? Brand.success : Brand.primary} />
+                <Text style={[styles.codeBtnText, copied && { color: Brand.success }]}>{copied ? 'Copied!' : 'Copy'}</Text>
               </Pressable>
-              <Pressable accessibilityRole="button" style={styles.codeBtn}>
+              <Pressable onPress={onShare} accessibilityRole="button" style={styles.codeBtn}>
                 <Ionicons name="share-social-outline" size={16} color={Brand.primary} />
                 <Text style={styles.codeBtnText}>Share</Text>
               </Pressable>
