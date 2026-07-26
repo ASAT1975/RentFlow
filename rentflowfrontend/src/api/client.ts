@@ -18,6 +18,7 @@ export class ApiError extends Error {
  * cleared on reload (see the auth store for the persistence follow-up).
  */
 let authToken: string | null = null;
+let onUnauthenticated: (() => void) | null = null;
 
 export function setAuthToken(token: string | null) {
   authToken = token;
@@ -25,6 +26,10 @@ export function setAuthToken(token: string | null) {
 
 export function getAuthToken() {
   return authToken;
+}
+
+export function setUnauthenticatedHandler(handler: () => void) {
+  onUnauthenticated = handler;
 }
 
 type Method = "GET" | "POST" | "PUT" | "DELETE";
@@ -93,6 +98,9 @@ async function request<T>(
 
   const parsed = parseBody(await response.text());
   if (!response.ok) {
+    if (response.status === 403 && onUnauthenticated) {
+      onUnauthenticated();
+    }
     throw new ApiError(
       response.status,
       extractMessage(parsed, response.status),

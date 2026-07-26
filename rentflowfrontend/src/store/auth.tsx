@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { authApi, setAuthToken, type Role, API_URL } from "@/api";
+import { authApi, setAuthToken, setUnauthenticatedHandler, type Role } from "@/api";
 
 export type GoogleSignInResult =
   | { status: "ok"; role: Role }
@@ -61,28 +61,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Restore session on mount
   useEffect(() => {
     SecureStore.getItemAsync(SESSION_KEY)
-      .then(async (raw) => {
+      .then((raw) => {
         if (raw) {
           const saved = JSON.parse(raw) as { token: string; user: AuthUser };
-          // Verify token is still valid before restoring session
-          try {
-            setAuthToken(saved.token);
-            const res = await fetch(`${API_URL}/api/auth/health`, {
-              headers: { Authorization: `Bearer ${saved.token}` },
-            });
-            if (res.ok) {
-              setToken(saved.token);
-              setUser(saved.user);
-            } else {
-              // Token invalid/expired — clear it
-              setAuthToken(null);
-              void SecureStore.deleteItemAsync(SESSION_KEY);
-            }
-          } catch {
-            // Network error — restore session optimistically
-            setToken(saved.token);
-            setUser(saved.user);
-          }
+          setAuthToken(saved.token);
+          setToken(saved.token);
+          setUser(saved.user);
         }
       })
       .catch(() => {})
@@ -203,7 +187,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setPendingSignup(null);
     setPendingGoogleToken(null);
     setAuthToken(null);
+    setUnauthenticatedHandler(null);
     void SecureStore.deleteItemAsync(SESSION_KEY);
+  }, []);
+
+  useEffect(() => {
+    setUnauthenticatedHandler(signOut);
+    return () => setUnauthenticatedHandler(null);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const value = useMemo<AuthContextValue>(
