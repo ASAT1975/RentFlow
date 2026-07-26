@@ -23,6 +23,12 @@ public class User {
 
     private String phone;
 
+    @JsonIgnore
+    private String resetToken;
+
+    @JsonIgnore
+    private java.time.LocalDateTime resetTokenExpiry;
+
     @Enumerated(EnumType.STRING)
     private Role role; // LANDLORD or TENANT
 
@@ -41,6 +47,12 @@ public class User {
 
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+
+    public String getResetToken() { return resetToken; }
+    public void setResetToken(String resetToken) { this.resetToken = resetToken; }
+
+    public java.time.LocalDateTime getResetTokenExpiry() { return resetTokenExpiry; }
+    public void setResetTokenExpiry(java.time.LocalDateTime resetTokenExpiry) { this.resetTokenExpiry = resetTokenExpiry; }
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }

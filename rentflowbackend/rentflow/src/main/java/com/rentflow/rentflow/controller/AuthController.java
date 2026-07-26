@@ -128,4 +128,25 @@ public class AuthController {
                 "email", user.getEmail()
         ));
     }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        if (email == null || email.isBlank())
+            return ResponseEntity.status(400).body(Map.of("error", "Email is required"));
+        authService.sendResetCode(email);
+        return ResponseEntity.ok(Map.of("message", "If that email exists, a reset code has been sent."));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String code = body.get("code");
+        String newPassword = body.get("newPassword");
+        if (email == null || code == null || newPassword == null)
+            return ResponseEntity.status(400).body(Map.of("error", "email, code and newPassword are required"));
+        boolean ok = authService.resetPassword(email, code, newPassword);
+        if (!ok) return ResponseEntity.status(400).body(Map.of("error", "Invalid or expired code."));
+        return ResponseEntity.ok(Map.of("message", "Password reset successful."));
+    }
 }
