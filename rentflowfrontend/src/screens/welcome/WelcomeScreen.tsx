@@ -17,7 +17,7 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PrimaryButton } from "@/components/ui/primary-button";
-import { Brand } from "@/constants/brand";
+import { Brand } from "@/constants/brand"
 import { useAuth } from "@/store/auth";
 
 import { styles } from "./styles";

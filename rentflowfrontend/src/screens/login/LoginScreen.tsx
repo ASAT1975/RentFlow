@@ -228,7 +228,7 @@ export function LoginScreen() {
               />
 
               {!isSignup ? (
-                <Text style={styles.forgot} accessibilityRole="link">
+                <Text style={styles.forgot} accessibilityRole="link" onPress={() => router.push("/forgot-password")}>
                   Forgot Password?
                 </Text>
               ) : null}

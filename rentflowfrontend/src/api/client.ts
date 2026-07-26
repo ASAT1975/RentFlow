@@ -1,4 +1,4 @@
-import { API_URL } from './config';
+import { API_URL } from "./config";
 
 /** Error thrown for any non-2xx response or network failure. */
 export class ApiError extends Error {
@@ -7,7 +7,7 @@ export class ApiError extends Error {
 
   constructor(status: number, message: string) {
     super(message);
-    this.name = 'ApiError';
+    this.name = "ApiError";
     this.status = status;
   }
 }
@@ -27,7 +27,7 @@ export function getAuthToken() {
   return authToken;
 }
 
-type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type Method = "GET" | "POST" | "PUT" | "DELETE";
 
 function parseBody(text: string): unknown {
   if (!text) return null;
@@ -40,16 +40,20 @@ function parseBody(text: string): unknown {
 }
 
 function extractMessage(body: unknown, status: number): string {
-  if (body && typeof body === 'object') {
+  if (body && typeof body === "object") {
     const record = body as Record<string, unknown>;
     const message = record.error ?? record.message;
-    if (typeof message === 'string' && message.length > 0) return message;
+    if (typeof message === "string" && message.length > 0) return message;
   }
-  if (typeof body === 'string' && body.length > 0) return body;
+  if (typeof body === "string" && body.length > 0) return body;
   return `Request failed with status ${status}`;
 }
 
-async function fetchWithTimeout(url: string, options: RequestInit, ms = 30000): Promise<Response> {
+async function fetchWithTimeout(
+  url: string,
+  options: RequestInit,
+  ms = 30000,
+): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), ms);
   try {
@@ -59,40 +63,47 @@ async function fetchWithTimeout(url: string, options: RequestInit, ms = 30000): 
   }
 }
 
-async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
-  const headers: Record<string, string> = { Accept: 'application/json' };
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+async function request<T>(
+  method: Method,
+  path: string,
+  body?: unknown,
+): Promise<T> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (body !== undefined) headers["Content-Type"] = "application/json";
   if (authToken) headers.Authorization = `Bearer ${authToken}`;
 
   const fullUrl = `${API_URL}${path}`;
-  console.log('[API]', method, fullUrl);
+  console.log("[API]", method, fullUrl);
 
   let response: Response;
   try {
-    response = await fetchWithTimeout(
-      fullUrl,
-      { method, headers, body: body !== undefined ? JSON.stringify(body) : undefined },
-      30000,
-    );
+    response = await fetchWithTimeout(fullUrl, {
+      method,
+      headers,
+      body: body !== undefined ? JSON.stringify(body) : undefined,
+    });
   } catch (err) {
     console.log('[API] fetch error:', err);
-    if (err instanceof Error && err.name === 'AbortError') {
+    if (err instanceof Error && err.name === "AbortError") {
       throw new ApiError(0, 'The server is waking up — please try again in a moment.');
     }
     throw new ApiError(0, `Cannot reach the server. Check your internet connection. (${fullUrl})`);
   }
-  console.log('[API] status:', response.status);
+  console.log("[API] status:", response.status);
 
   const parsed = parseBody(await response.text());
   if (!response.ok) {
-    throw new ApiError(response.status, extractMessage(parsed, response.status));
+    throw new ApiError(
+      response.status,
+      extractMessage(parsed, response.status),
+    );
   }
   return parsed as T;
 }
 
 export const api = {
-  get: <T>(path: string) => request<T>('GET', path),
-  post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
-  put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
-  del: <T>(path: string) => request<T>('DELETE', path),
+  get: <T>(path: string) => request<T>("GET", path),
+  post: <T>(path: string, body?: unknown) => request<T>("POST", path, body),
+  put: <T>(path: string, body?: unknown) => request<T>("PUT", path, body),
+  del: <T>(path: string) => request<T>("DELETE", path),
 };

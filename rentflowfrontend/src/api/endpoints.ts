@@ -20,6 +20,10 @@ export const authApi = {
     api.post<AuthResponse>("/auth/register", { name, email, password, role, phone }),
   login: (email: string, password: string) =>
     api.post<AuthResponse>("/auth/login", { email, password }),
+  forgotPassword: (email: string) =>
+    api.post<{ message: string }>("/auth/forgot-password", { email }),
+  resetPassword: (email: string, code: string, newPassword: string) =>
+    api.post<{ message: string }>("/auth/reset-password", { email, code, newPassword }),
   /** Exchange a Google access token for a RentFlow session; `role` completes a new user. */
   google: (accessToken: string, role?: Role) =>
     api.post<GoogleAuthResponse>(
