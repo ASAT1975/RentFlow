@@ -64,9 +64,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((raw) => {
         if (raw) {
           const saved = JSON.parse(raw) as { token: string; user: AuthUser };
+          setAuthToken(saved.token);
           setToken(saved.token);
           setUser(saved.user);
-          setAuthToken(saved.token);
         }
       })
       .catch(() => {})
