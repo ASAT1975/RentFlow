@@ -9,7 +9,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { authApi, setAuthToken, type Role } from "@/api";
+import { authApi, setAuthToken, type Role, API_URL } from "@/api";
 
 export type GoogleSignInResult =
   | { status: "ok"; role: Role }
@@ -61,12 +61,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Restore session on mount
   useEffect(() => {
     SecureStore.getItemAsync(SESSION_KEY)
-      .then((raw) => {
+      .then(async (raw) => {
         if (raw) {
           const saved = JSON.parse(raw) as { token: string; user: AuthUser };
-          setAuthToken(saved.token);
-          setToken(saved.token);
-          setUser(saved.user);
+          // Verify token is still valid before restoring session
+          try {
+            setAuthToken(saved.token);
+            const res = await fetch(`${API_URL}/api/auth/health`, {
+              headers: { Authorization: `Bearer ${saved.token}` },
+            });
+            if (res.ok) {
+              setToken(saved.token);
+              setUser(saved.user);
+            } else {
+              // Token invalid/expired — clear it
+              setAuthToken(null);
+              void SecureStore.deleteItemAsync(SESSION_KEY);
+            }
+          } catch {
+            // Network error — restore session optimistically
+            setToken(saved.token);
+            setUser(saved.user);
+          }
         }
       })
       .catch(() => {})
