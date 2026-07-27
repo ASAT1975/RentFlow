@@ -41,6 +41,12 @@ public class PaymentService {
 
     // Landlord creates a rent due for a tenant
     public Payment createPayment(User tenant, Property property, Double totalAmount, LocalDate dueDate) {
+        // Prevent duplicate: return existing unpaid payment for same tenant/property/dueDate
+        paymentRepository.findByTenantAndProperty(tenant, property).stream()
+                .filter(p -> p.getDueDate().equals(dueDate) && p.getStatus() != PaymentStatus.PAID)
+                .findFirst()
+                .ifPresent(existing -> { throw new RuntimeException("DUPLICATE: Payment already exists for this tenant and due date."); });
+
         Payment payment = new Payment();
         payment.setTenant(tenant);
         payment.setProperty(property);

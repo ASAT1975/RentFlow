@@ -22,6 +22,7 @@ public class MaintenanceRequest {
     private String title;
     private String description;
     private LocalDate submittedDate;
+    private String photoUrl;
 
     @Enumerated(EnumType.STRING)
     private MaintenanceStatus status;
@@ -46,4 +47,7 @@ public class MaintenanceRequest {
 
     public MaintenanceStatus getStatus() { return status; }
     public void setStatus(MaintenanceStatus status) { this.status = status; }
+
+    public String getPhotoUrl() { return photoUrl; }
+    public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
 }

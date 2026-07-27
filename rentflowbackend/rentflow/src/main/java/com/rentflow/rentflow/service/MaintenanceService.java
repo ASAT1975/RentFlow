@@ -43,4 +43,8 @@ public class MaintenanceService {
     public List<MaintenanceRequest> getTenantRequests(User tenant) {
         return maintenanceRepository.findByTenant(tenant);
     }
+
+    public MaintenanceRequest save(MaintenanceRequest request) {
+        return maintenanceRepository.save(request);
+    }
 }

@@ -60,4 +60,15 @@ public class UnitService {
     public RentUnit saveUnit(RentUnit unit) {
         return unitRepository.save(unit);
     }
+
+    public RentUnit assignTenant(Long unitId, User tenant) {
+        RentUnit unit = unitRepository.findById(unitId)
+                .orElseThrow(() -> new RuntimeException("Unit not found"));
+        if (unit.getStatus() == UnitStatus.OCCUPIED) {
+            throw new RuntimeException("Unit is already occupied");
+        }
+        unit.setTenant(tenant);
+        unit.setStatus(UnitStatus.OCCUPIED);
+        return unitRepository.save(unit);
+    }
 }

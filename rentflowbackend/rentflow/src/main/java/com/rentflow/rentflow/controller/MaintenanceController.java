@@ -6,10 +6,15 @@ import com.rentflow.rentflow.security.JwtUtil;
 import com.rentflow.rentflow.service.AuthService;
 import com.rentflow.rentflow.service.MaintenanceService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/maintenance")
@@ -43,6 +48,7 @@ public class MaintenanceController {
         Long propertyId = Long.valueOf(body.get("propertyId").toString());
         String title = (String) body.get("title");
         String description = (String) body.get("description");
+        String photoUrl = body.containsKey("photoUrl") ? (String) body.get("photoUrl") : null;
 
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
@@ -50,13 +56,46 @@ public class MaintenanceController {
         MaintenanceRequest request = maintenanceService.submitRequest(
                 tenant, property, title, description);
 
+        if (photoUrl != null && !photoUrl.isBlank()) {
+            request.setPhotoUrl(photoUrl);
+            maintenanceService.save(request);
+        }
+
         return ResponseEntity.ok(Map.of(
                 "id", request.getId(),
                 "title", request.getTitle(),
                 "description", request.getDescription(),
                 "status", request.getStatus(),
-                "submittedDate", request.getSubmittedDate()
+                "submittedDate", request.getSubmittedDate(),
+                "photoUrl", request.getPhotoUrl() != null ? request.getPhotoUrl() : ""
         ));
+    }
+
+    // Upload a photo for a maintenance request
+    @PostMapping(value = "/upload-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> uploadPhoto(
+            @RequestHeader("Authorization") String authHeader,
+            @RequestParam("file") MultipartFile file) {
+
+        getCurrentUser(authHeader); // auth check
+        if (file.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No file provided"));
+
+        try {
+            String ext = "";
+            String original = file.getOriginalFilename();
+            if (original != null && original.contains("."))
+                ext = original.substring(original.lastIndexOf('.'));
+
+            String filename = UUID.randomUUID() + ext;
+            Path uploadDir = Paths.get("uploads", "maintenance");
+            Files.createDirectories(uploadDir);
+            Files.copy(file.getInputStream(), uploadDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+
+            String url = "/uploads/maintenance/" + filename;
+            return ResponseEntity.ok(Map.of("url", url));
+        } catch (IOException e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Upload failed"));
+        }
     }
 
     // Landlord updates request status
@@ -91,6 +130,7 @@ public class MaintenanceController {
             dto.put("description", r.getDescription());
             dto.put("status", r.getStatus());
             dto.put("submittedDate", r.getSubmittedDate());
+            dto.put("photoUrl", r.getPhotoUrl() != null ? r.getPhotoUrl() : "");
             if (r.getTenant() != null)
                 dto.put("tenant", Map.of("id", r.getTenant().getId(), "name", r.getTenant().getName(), "email", r.getTenant().getEmail()));
             if (r.getProperty() != null)
@@ -113,6 +153,7 @@ public class MaintenanceController {
             dto.put("description", r.getDescription());
             dto.put("status", r.getStatus());
             dto.put("submittedDate", r.getSubmittedDate());
+            dto.put("photoUrl", r.getPhotoUrl() != null ? r.getPhotoUrl() : "");
             if (r.getTenant() != null)
                 dto.put("tenant", Map.of("id", r.getTenant().getId(), "name", r.getTenant().getName(), "email", r.getTenant().getEmail()));
             if (r.getProperty() != null)

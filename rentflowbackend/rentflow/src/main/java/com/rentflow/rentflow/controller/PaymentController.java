@@ -66,7 +66,15 @@ public class PaymentController {
             return ResponseEntity.status(403).body(Map.of("error", "You do not own this property"));
         }
 
-        Payment payment = paymentService.createPayment(tenant, property, totalAmount, dueDate);
+        Payment payment;
+        try {
+            payment = paymentService.createPayment(tenant, property, totalAmount, dueDate);
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().startsWith("DUPLICATE")) {
+                return ResponseEntity.status(409).body(Map.of("error", "Rent already charged for this tenant for that due date."));
+            }
+            throw e;
+        }
 
         Map<String, Object> resp = new HashMap<>();
         resp.put("id", payment.getId());

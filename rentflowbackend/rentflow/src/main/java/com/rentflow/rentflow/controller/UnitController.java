@@ -127,7 +127,8 @@ public class UnitController {
                 dto.put("tenant", Map.of(
                         "id", u.getTenant().getId(),
                         "name", u.getTenant().getName(),
-                        "email", u.getTenant().getEmail()
+                        "email", u.getTenant().getEmail(),
+                        "phone", u.getTenant().getPhone() != null ? u.getTenant().getPhone() : ""
                 ));
             }
             return dto;
@@ -180,8 +181,37 @@ public class UnitController {
                 "landlordPhone", landlord.getPhone() != null ? landlord.getPhone() : ""
         ));
     }
+    // Landlord assigns a tenant to a unit by email
+    @PostMapping("/{unitId}/assign-tenant")
+    public ResponseEntity<?> assignTenant(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @PathVariable Long unitId,
+            @RequestBody Map<String, String> body) {
+
+        User landlord = getCurrentUser(authHeader);
+        if (landlord.getRole() != Role.LANDLORD) {
+            return ResponseEntity.status(403).body(Map.of("error", "Only landlords can assign tenants"));
+        }
+
+        String tenantEmail = body.get("tenantEmail");
+        User tenant = userRepository.findByEmail(tenantEmail)
+                .orElseThrow(() -> new RuntimeException("No user found with email: " + tenantEmail));
+
+        if (tenant.getRole() != Role.TENANT) {
+            return ResponseEntity.status(400).body(Map.of("error", "User is not a tenant"));
+        }
+
+        RentUnit unit = unitService.assignTenant(unitId, tenant);
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Tenant assigned successfully",
+                "unitNumber", unit.getUnitNumber(),
+                "tenantName", tenant.getName(),
+                "tenantEmail", tenant.getEmail()
+        ));
+    }
+
     // Tenant deauthorizes automatic rent payment
-    @PostMapping("/deauthorize-payment")
     public ResponseEntity<?> deauthorizePayment(
             @RequestHeader(value = "Authorization", required = false) String authHeader) {
 
