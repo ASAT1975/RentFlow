@@ -1,7 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Linking, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { Alert, Linking, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -71,6 +73,22 @@ export function ProfileScreen() {
   const [rating, setRating] = useState(0);
   const [review, setReview] = useState('');
   const [hasReviewed, setHasReviewed] = useState(false);
+  const [avatar, setAvatar] = useState<string | null>(null);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow access to your photo library.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled) setAvatar(result.assets[0].uri);
+  };
 
   const name = user?.name ?? 'Tenant';
   const userEmail = user?.email ?? '—';
@@ -108,14 +126,19 @@ export function ProfileScreen() {
         showsVerticalScrollIndicator={false}>
         {/* Profile header */}
         <Animated.View entering={FadeInDown.duration(450)} style={styles.profileHeader}>
-          <View style={styles.avatarWrap}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initialsOf(name)}</Text>
+          <Pressable onPress={pickImage} accessibilityRole="button" accessibilityLabel="Change profile picture">
+            <View style={styles.avatarWrap}>
+              <View style={styles.avatar}>
+                {avatar
+                  ? <Image source={{ uri: avatar }} style={{ width: '100%', height: '100%', borderRadius: 999 }} contentFit="cover" />
+                  : <Text style={styles.avatarText}>{initialsOf(name)}</Text>
+                }
+              </View>
+              <View style={styles.editBadge}>
+                <Ionicons name="camera" size={13} color={Brand.onPrimary} />
+              </View>
             </View>
-            <View style={styles.editBadge}>
-              <Ionicons name="camera" size={13} color={Brand.onPrimary} />
-            </View>
-          </View>
+          </Pressable>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.email}>{userEmail}</Text>
         </Animated.View>

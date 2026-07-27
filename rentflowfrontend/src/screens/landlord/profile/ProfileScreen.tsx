@@ -1,4 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Modal, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -80,6 +82,22 @@ export function ProfileScreen() {
   const { summary } = usePortfolio();
   const [editVisible, setEditVisible] = useState(false);
   const [editName, setEditName] = useState('');
+  const [avatar, setAvatar] = useState<string | null>(null);
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Please allow access to your photo library.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+    if (!result.canceled) setAvatar(result.assets[0].uri);
+  };
 
   const name = user?.name ?? 'Landlord';
   const email = user?.email ?? '—';
@@ -121,14 +139,19 @@ export function ProfileScreen() {
         showsVerticalScrollIndicator={false}>
         {/* Profile header */}
         <Animated.View entering={FadeInDown.duration(450)} style={styles.profileHeader}>
-          <View style={styles.avatarWrap}>
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{initialsOf(name)}</Text>
+          <Pressable onPress={pickImage} accessibilityRole="button" accessibilityLabel="Change profile picture">
+            <View style={styles.avatarWrap}>
+              <View style={styles.avatar}>
+                {avatar
+                  ? <Image source={{ uri: avatar }} style={{ width: '100%', height: '100%', borderRadius: 999 }} contentFit="cover" />
+                  : <Text style={styles.avatarText}>{initialsOf(name)}</Text>
+                }
+              </View>
+              <View style={styles.editBadge}>
+                <Ionicons name="camera" size={13} color={Brand.onPrimary} />
+              </View>
             </View>
-            <View style={styles.editBadge}>
-              <Ionicons name="camera" size={13} color={Brand.onPrimary} />
-            </View>
-          </View>
+          </Pressable>
           <Text style={styles.name}>{name}</Text>
           <View style={styles.roleBadge}>
             <Ionicons name="briefcase" size={12} color={Brand.primary} />
@@ -173,11 +196,6 @@ export function ProfileScreen() {
               icon="card-outline"
               label="Payout Account"
               onPress={() => Alert.alert('Coming Soon', 'Payout account setup will be available soon.')}
-            />
-            <LinkRow
-              icon="settings-outline"
-              label="App Settings"
-              onPress={() => router.push('/landlord/settings')}
               last
             />
           </View>

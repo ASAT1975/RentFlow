@@ -55,6 +55,7 @@ export type LandlordTenant = {
   amount: string;
   /** Backend fields used to charge rent, present for API-sourced tenants. */
   tenantEmail?: string;
+  tenantPhone?: string;
   propertyId?: number;
   rentAmount?: number;
 };

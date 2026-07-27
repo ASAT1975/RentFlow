@@ -33,6 +33,7 @@ type AuthContextValue = {
   user: AuthUser | null;
   token: string | null;
   isAuthenticated: boolean;
+  hydrated: boolean;
   /** Log in an existing user; returns their role so the caller can route. */
   signIn: (email: string, password: string) => Promise<Role>;
   /** Stash sign-up details until the user picks a role on the next screen. */
@@ -202,6 +203,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       token,
       isAuthenticated: token != null,
+      hydrated,
       signIn,
       beginSignup,
       completeSignup,

@@ -1,2 +1,1 @@
-export { default } from './TenantDashboardScreen';
-
+export { default } from './DashboardScreen';

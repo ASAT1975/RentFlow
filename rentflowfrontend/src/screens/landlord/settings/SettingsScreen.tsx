@@ -65,12 +65,19 @@ function ToggleRow({ icon, label, value, onValueChange, last }: ToggleRowProps) 
  * Landlord — Settings. Opened from the gear on the Profile header. App
  * preferences (language, currency), notification toggles and support links.
  */
+const LANGUAGES = ['English', 'French'];
+const CURRENCIES = ['GHS (GH₵)', 'NGN (₦)', 'XOF (CFA)'];
+
 export function SettingsScreen() {
   const router = useRouter();
   const { signOut } = useAuth();
   const [paymentAlerts, setPaymentAlerts] = useState(true);
   const [maintenanceRequests, setMaintenanceRequests] = useState(true);
   const [newTenants, setNewTenants] = useState(true);
+  const [language, setLanguage] = useState('English');
+  const [currency, setCurrency] = useState('GHS (GH₵)');
+  const [showLang, setShowLang] = useState(false);
+  const [showCurrency, setShowCurrency] = useState(false);
 
   const logOut = () => {
     signOut();
@@ -81,7 +88,7 @@ export function SettingsScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/')}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Back"
@@ -99,8 +106,28 @@ export function SettingsScreen() {
         <Animated.View entering={FadeInDown.duration(450)}>
           <Text style={styles.sectionTitle}>General</Text>
           <View style={styles.card}>
-            <LinkRow icon="language-outline" label="Language" value="English" />
-            <LinkRow icon="cash-outline" label="Currency" value="GHS (GH₵)" last />
+            <LinkRow icon="language-outline" label="Language" value={language} onPress={() => setShowLang(v => !v)} />
+            {showLang && (
+              <View style={styles.pickerGroup}>
+                {LANGUAGES.map((l) => (
+                  <Pressable key={l} style={styles.pickerOption} onPress={() => { setLanguage(l); setShowLang(false); }}>
+                    <Text style={[styles.pickerOptionText, l === language && styles.pickerOptionActive]}>{l}</Text>
+                    {l === language && <Ionicons name="checkmark" size={16} color={Brand.primary} />}
+                  </Pressable>
+                ))}
+              </View>
+            )}
+            <LinkRow icon="cash-outline" label="Currency" value={currency} onPress={() => setShowCurrency(v => !v)} last={!showCurrency} />
+            {showCurrency && (
+              <View style={[styles.pickerGroup, styles.rowLast]}>
+                {CURRENCIES.map((c) => (
+                  <Pressable key={c} style={styles.pickerOption} onPress={() => { setCurrency(c); setShowCurrency(false); }}>
+                    <Text style={[styles.pickerOptionText, c === currency && styles.pickerOptionActive]}>{c}</Text>
+                    {c === currency && <Ionicons name="checkmark" size={16} color={Brand.primary} />}
+                  </Pressable>
+                ))}
+              </View>
+            )}
           </View>
         </Animated.View>
 

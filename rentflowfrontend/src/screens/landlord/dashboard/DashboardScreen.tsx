@@ -84,7 +84,7 @@ export function DashboardScreen() {
             <Text style={styles.greetingSub}>Here&apos;s your portfolio today</Text>
           </View>
           <Pressable
-            onPress={() => router.push('/landlord/profile')}
+            onPress={() => router.push('/landlord/(tabs)/profile')}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Open profile"

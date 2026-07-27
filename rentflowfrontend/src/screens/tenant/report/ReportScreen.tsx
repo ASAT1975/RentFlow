@@ -8,6 +8,7 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api';
+import { maintenanceApi } from '@/api';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { TextField } from '@/components/ui/text-field';
@@ -65,9 +66,16 @@ export function ReportScreen() {
     if (!canSubmit || submitting) return;
     setSubmitting(true);
     try {
-      // Preserve the category/priority (backend stores only title + description).
+      let photoUrl: string | undefined;
+      if (photos.length > 0) {
+        try {
+          photoUrl = await maintenanceApi.uploadPhoto(photos[0]);
+        } catch {
+          // photo upload failed — submit without it
+        }
+      }
       const body = `${description.trim()}\n\nCategory: ${category} · Priority: ${priority}`;
-      await submitRequest(title, body);
+      await submitRequest(title, body, photoUrl);
       setSubmitted(true);
     } catch (err) {
       const message =

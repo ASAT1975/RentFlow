@@ -95,6 +95,27 @@ export const styles = StyleSheet.create({
     color: Brand.textSecondary,
   },
 
+  pickerGroup: {
+    borderBottomWidth: 1,
+    borderBottomColor: Brand.border,
+    paddingBottom: 4,
+  },
+  pickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    paddingHorizontal: 4,
+  },
+  pickerOptionText: {
+    fontSize: 14,
+    color: Brand.textSecondary,
+  },
+  pickerOptionActive: {
+    color: Brand.primary,
+    fontWeight: '700',
+  },
+
   signOut: {
     marginTop: 28,
   },

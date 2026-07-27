@@ -16,7 +16,7 @@ export function BackButton({ onPress, color = Brand.textPrimary, style }: BackBu
   const router = useRouter();
   return (
     <Pressable
-      onPress={onPress ?? (() => router.back())}
+      onPress={onPress ?? (() => router.canGoBack() ? router.back() : router.replace('/'))}
       hitSlop={12}
       accessibilityRole="button"
       accessibilityLabel="Go back"

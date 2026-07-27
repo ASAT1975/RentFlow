@@ -56,7 +56,7 @@ type MaintenanceContextValue = {
   refresh: () => Promise<void>;
   getById: (id: number) => MaintenanceItem | undefined;
   /** Tenant: submit a new request against their property. */
-  submit: (title: string, description: string) => Promise<void>;
+  submit: (title: string, description: string, photoUrl?: string) => Promise<void>;
   /** Landlord: advance a request's status. */
   updateStatus: (id: number, status: MaintenanceStatus) => Promise<void>;
 };
@@ -129,12 +129,13 @@ export function MaintenanceProvider({ children }: { children: ReactNode }) {
   }, [isAuthenticated, refresh, role]);
 
   const submit = useCallback(
-    async (title: string, description: string) => {
+    async (title: string, description: string, photoUrl?: string) => {
       if (!unit) throw new Error("You have not joined a property yet.");
-      await maintenanceApi.create(
+      await maintenanceApi.submit(
         unit.propertyId,
         title.trim(),
         description.trim(),
+        photoUrl,
       );
       await refresh();
     },

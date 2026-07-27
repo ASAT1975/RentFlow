@@ -84,6 +84,7 @@ function toLandlordTenant(property: Property, unit: Unit): LandlordTenant {
     status: "Due",
     amount: formatGhs(unit.rentAmount ?? 0),
     tenantEmail: unit.tenant?.email,
+    tenantPhone: unit.tenant?.phone ?? undefined,
     propertyId: property.id,
     rentAmount: unit.rentAmount ?? 0,
   };

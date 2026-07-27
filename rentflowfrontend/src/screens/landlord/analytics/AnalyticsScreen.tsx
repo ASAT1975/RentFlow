@@ -27,10 +27,6 @@ export function AnalyticsScreen() {
   const { properties, summary } = usePortfolio();
   const { payments } = usePayments();
 
-  const avgRent = summary.tenants
-    ? Math.round(Number(summary.monthlyRevenue.replace(/[^0-9]/g, '')) / summary.tenants)
-    : 0;
-
   // Build a 6-month revenue trend from real payment data.
   const revenueTrend = (() => {
     const months: { month: string; value: number }[] = [];
@@ -52,7 +48,6 @@ export function AnalyticsScreen() {
   const metrics: Metric[] = [
     { icon: 'bed-outline', tint: Brand.primarySoft, color: Brand.primary, label: 'Occupancy', value: `${Math.round(summary.occupancyRate * 100)}%` },
     { icon: 'wallet-outline', tint: Brand.successSoft, color: Brand.success, label: 'Monthly Revenue', value: summary.monthlyRevenue },
-    { icon: 'cash-outline', tint: Brand.warningSoft, color: Brand.warning, label: 'Avg. Rent', value: formatGhs(avgRent) },
     { icon: 'business-outline', tint: Brand.primarySoft, color: Brand.accent, label: 'Properties', value: String(summary.properties) },
   ];
 

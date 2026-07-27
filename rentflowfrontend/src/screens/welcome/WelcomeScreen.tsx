@@ -18,7 +18,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { PrimaryButton } from "@/components/ui/primary-button";
 import { Brand } from "@/constants/brand"
-import { useAuth } from "@/store/auth";
 
 import { styles } from "./styles";
 
@@ -32,16 +31,6 @@ const BUILDING = require("../../../assets/images/welcome-building.png");
  */
 export function WelcomeScreen() {
   const router = useRouter();
-  const { isAuthenticated, user } = useAuth();
-
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      router.replace(
-        user.role === "LANDLORD" ? "/landlord/dashboard" : "/tenant/dashboard",
-      );
-    }
-  }, [isAuthenticated, user, router]);
-
   const handleGoogleSignIn = () =>
     router.push({ pathname: "/login", params: { mode: "login", google: "1" } });
 

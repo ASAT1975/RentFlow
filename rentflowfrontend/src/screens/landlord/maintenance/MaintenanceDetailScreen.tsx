@@ -54,7 +54,7 @@ export function MaintenanceDetailScreen() {
     <SafeAreaView style={styles.safeArea} edges={['top']}>
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => router.canGoBack() ? router.back() : router.replace('/landlord/(tabs)/dashboard')}
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel="Back"

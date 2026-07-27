@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Alert, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
+import { Alert, Linking, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -37,6 +37,27 @@ export function TenantsScreen() {
   const { tenants: allTenants, loading, refresh } = usePortfolio();
   const { charge } = usePayments();
   const [filter, setFilter] = useState<Filter>('All');
+
+  const openTenant = (t: LandlordTenant) => {
+    type AlertBtn = { text: string; style?: 'cancel' | 'default' | 'destructive'; onPress?: () => void };
+    const actions: AlertBtn[] = [];
+
+    if (t.tenantPhone) {
+      actions.push({ text: 'Call', onPress: () => Linking.openURL(`tel:${t.tenantPhone}`) });
+      actions.push({ text: 'SMS', onPress: () => Linking.openURL(`sms:${t.tenantPhone}`) });
+    }
+    if ((t.status === 'Due' || t.status === 'Overdue') && t.tenantEmail && t.propertyId && t.rentAmount) {
+      actions.push({ text: 'Charge Rent', onPress: () => chargeRent(t) });
+    }
+
+    if (actions.length === 0) {
+      Alert.alert(t.name, 'No contact details available for this tenant.');
+      return;
+    }
+
+    actions.push({ text: 'Cancel', style: 'cancel' });
+    Alert.alert(t.name, `${t.property} · ${t.unit}`, actions);
+  };
 
   const chargeRent = (t: LandlordTenant) => {
     if (!t.tenantEmail || t.propertyId == null || !t.rentAmount) {
@@ -115,9 +136,9 @@ export function TenantsScreen() {
           return (
             <Animated.View key={t.id} entering={FadeInDown.delay(i * 50).duration(420)}>
               <Pressable
-                onPress={() => chargeRent(t)}
+                onPress={() => openTenant(t)}
                 accessibilityRole="button"
-                accessibilityLabel={`Charge rent to ${t.name}`}
+                accessibilityLabel={`Contact ${t.name}`}
                 style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{t.initials}</Text>

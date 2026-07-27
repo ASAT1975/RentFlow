@@ -75,6 +75,29 @@ export const unitsApi = {
 };
 
 export const maintenanceApi = {
+  submit: (propertyId: number, title: string, description: string, photoUrl?: string) =>
+    api.post<MaintenanceRequest>("/maintenance/submit", {
+      propertyId,
+      title,
+      description,
+      ...(photoUrl ? { photoUrl } : {}),
+    }),
+  uploadPhoto: async (uri: string): Promise<string> => {
+    const { API_URL: base } = await import('./config');
+    const { getAuthToken } = await import('./client');
+    const filename = uri.split('/').pop() ?? 'photo.jpg';
+    const ext = filename.split('.').pop() ?? 'jpg';
+    const form = new FormData();
+    form.append('file', { uri, name: filename, type: `image/${ext}` } as any);
+    const res = await fetch(`${base}/maintenance/upload-photo`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${getAuthToken()}` },
+      body: form,
+    });
+    if (!res.ok) throw new Error('Photo upload failed');
+    const data = await res.json();
+    return data.url as string;
+  },
   create: (propertyId: number, title: string, description: string) =>
     api.post<MaintenanceRequest>("/maintenance/create", {
       propertyId,
