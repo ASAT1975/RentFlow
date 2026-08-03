@@ -6,15 +6,10 @@ import com.rentflow.rentflow.security.JwtUtil;
 import com.rentflow.rentflow.service.AuthService;
 import com.rentflow.rentflow.service.MaintenanceService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-import java.io.IOException;
-import java.nio.file.*;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/maintenance")
@@ -69,33 +64,6 @@ public class MaintenanceController {
                 "submittedDate", request.getSubmittedDate(),
                 "photoUrl", request.getPhotoUrl() != null ? request.getPhotoUrl() : ""
         ));
-    }
-
-    // Upload a photo for a maintenance request
-    @PostMapping(value = "/upload-photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadPhoto(
-            @RequestHeader("Authorization") String authHeader,
-            @RequestParam("file") MultipartFile file) {
-
-        getCurrentUser(authHeader); // auth check
-        if (file.isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "No file provided"));
-
-        try {
-            String ext = "";
-            String original = file.getOriginalFilename();
-            if (original != null && original.contains("."))
-                ext = original.substring(original.lastIndexOf('.'));
-
-            String filename = UUID.randomUUID() + ext;
-            Path uploadDir = Paths.get("uploads", "maintenance");
-            Files.createDirectories(uploadDir);
-            Files.copy(file.getInputStream(), uploadDir.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
-
-            String url = "/uploads/maintenance/" + filename;
-            return ResponseEntity.ok(Map.of("url", url));
-        } catch (IOException e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Upload failed"));
-        }
     }
 
     // Landlord updates request status

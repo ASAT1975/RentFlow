@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
+import { Image } from 'expo-image';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
@@ -117,6 +118,17 @@ export function MaintenanceDetailScreen() {
                 <Text style={styles.descText}>{request.description}</Text>
               </View>
             </Animated.View>
+
+            {request.photoUrl ? (
+              <Animated.View entering={FadeInDown.delay(240).duration(450)}>
+                <Text style={styles.sectionLabel}>Photo</Text>
+                <Image
+                  source={{ uri: request.photoUrl }}
+                  style={{ width: '100%', height: 220, borderRadius: 12 }}
+                  contentFit="cover"
+                />
+              </Animated.View>
+            ) : null}
           </ScrollView>
 
           <View style={styles.footer}>

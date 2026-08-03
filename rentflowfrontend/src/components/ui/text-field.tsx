@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 import {
   type StyleProp,
   StyleSheet,
@@ -14,31 +14,16 @@ import {
 import { Brand } from '@/constants/brand';
 
 export type TextFieldProps = TextInputProps & {
-  /** Label rendered above the field. */
   label?: string;
-  /** Leading element (usually an icon). */
   leftIcon?: React.ReactNode;
-  /** Trailing element, shown when the field is not a password. */
   rightSlot?: React.ReactNode;
-  /** Wrapper style (for layout / spacing). */
   containerStyle?: StyleProp<ViewStyle>;
 };
 
-/**
- * Shared labelled text input with focus highlight. When `secureTextEntry` is
- * set it automatically renders an eye toggle to show/hide the value.
- */
-export function TextField({
-  label,
-  leftIcon,
-  rightSlot,
-  containerStyle,
-  secureTextEntry,
-  onFocus,
-  onBlur,
-  style,
-  ...inputProps
-}: TextFieldProps) {
+export const TextField = forwardRef<TextInput, TextFieldProps>(function TextField(
+  { label, leftIcon, rightSlot, containerStyle, secureTextEntry, onFocus, onBlur, style, ...inputProps },
+  ref,
+) {
   const [focused, setFocused] = useState(false);
   const [hidden, setHidden] = useState(!!secureTextEntry);
 
@@ -48,17 +33,12 @@ export function TextField({
       <View style={[styles.field, focused && styles.fieldFocused]}>
         {leftIcon ? <View style={styles.left}>{leftIcon}</View> : null}
         <TextInput
+          ref={ref}
           style={[styles.input, style]}
           placeholderTextColor={Brand.textMuted}
           secureTextEntry={hidden}
-          onFocus={(e) => {
-            setFocused(true);
-            onFocus?.(e);
-          }}
-          onBlur={(e) => {
-            setFocused(false);
-            onBlur?.(e);
-          }}
+          onFocus={(e) => { setFocused(true); onFocus?.(e); }}
+          onBlur={(e) => { setFocused(false); onBlur?.(e); }}
           {...inputProps}
         />
         {secureTextEntry ? (
@@ -79,7 +59,7 @@ export function TextField({
       </View>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   label: {

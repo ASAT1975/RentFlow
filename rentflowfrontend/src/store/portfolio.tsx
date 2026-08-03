@@ -268,7 +268,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
         inviteCode: created.inviteCode,
       };
       setSetupProperty(setup);
-      void refresh();
+      refresh().catch((err) => console.error('Failed to refresh portfolio:', err));
       return setup;
     },
     [refresh],

@@ -131,6 +131,7 @@ export const styles = StyleSheet.create({
     marginBottom: 14,
   },
   sectionTitle: {
+    flex: 1,
     fontSize: 17,
     fontWeight: '800',
     color: Brand.textPrimary,

@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
-import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from "react-native";
+import { useRef, useState } from "react";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -19,6 +19,9 @@ export function ForgotPasswordScreen() {
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const codeRef = useRef<TextInput>(null);
+  const newPasswordRef = useRef<TextInput>(null);
 
   const sendCode = async () => {
     if (!email.trim()) return Alert.alert("Enter your email");
@@ -71,17 +74,24 @@ export function ForgotPasswordScreen() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
+                returnKeyType="done"
+                onSubmitEditing={sendCode}
               />
             ) : (
               <>
                 <TextField
+                  ref={codeRef}
                   label="Reset Code"
                   value={code}
                   onChangeText={setCode}
                   placeholder="123456"
                   keyboardType="number-pad"
+                  returnKeyType="next"
+                  onSubmitEditing={() => newPasswordRef.current?.focus()}
+                  blurOnSubmit={false}
                 />
                 <TextField
+                  ref={newPasswordRef}
                   label="New Password"
                   value={newPassword}
                   onChangeText={setNewPassword}
@@ -89,6 +99,8 @@ export function ForgotPasswordScreen() {
                   secureTextEntry
                   autoCapitalize="none"
                   containerStyle={{ marginTop: 16 }}
+                  returnKeyType="done"
+                  onSubmitEditing={resetPassword}
                 />
               </>
             )}

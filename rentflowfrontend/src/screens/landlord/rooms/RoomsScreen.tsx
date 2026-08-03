@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { useState, useRef } from 'react';
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown, Layout } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -36,6 +36,7 @@ export function RoomsScreen() {
   const [type, setType] = useState<string>('Studio');
   const [rent, setRent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const rentRef = useRef<TextInput>(null);
 
   const canAdd = name.trim().length > 0 && rent.trim().length > 0;
 
@@ -96,6 +97,9 @@ export function RoomsScreen() {
             onChangeText={setName}
             placeholder="e.g. Unit B3"
             containerStyle={styles.field}
+            returnKeyType="next"
+            onSubmitEditing={() => rentRef.current?.focus()}
+            blurOnSubmit={false}
           />
           <Text style={styles.label}>Type</Text>
           <View style={styles.chips}>
@@ -111,12 +115,15 @@ export function RoomsScreen() {
             })}
           </View>
           <TextField
+            ref={rentRef}
             label="Monthly Rent (GH₵)"
             value={rent}
             onChangeText={setRent}
             placeholder="600"
             keyboardType="number-pad"
             containerStyle={styles.field}
+            returnKeyType="done"
+            onSubmitEditing={addRoom}
           />
           <Pressable
             onPress={addRoom}

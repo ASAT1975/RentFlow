@@ -1,7 +1,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { useRef, useState } from 'react';
+import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -35,6 +35,10 @@ export function AddPropertyScreen() {
   const [units, setUnits] = useState('');
   const [rent, setRent] = useState('');
   const [saving, setSaving] = useState(false);
+
+  const locationRef = useRef<TextInput>(null);
+  const unitsRef = useRef<TextInput>(null);
+  const rentRef = useRef<TextInput>(null);
 
   const canSave =
     name.trim().length > 0 &&
@@ -88,6 +92,9 @@ export function AddPropertyScreen() {
             onChangeText={setName}
             placeholder="e.g. Green Villa Apartments"
             containerStyle={styles.field}
+            returnKeyType="next"
+            onSubmitEditing={() => locationRef.current?.focus()}
+            blurOnSubmit={false}
           />
 
           <Text style={styles.label}>Property Type</Text>
@@ -110,29 +117,40 @@ export function AddPropertyScreen() {
           </View>
 
           <TextField
+            ref={locationRef}
             label="Location"
             value={location}
             onChangeText={setLocation}
             placeholder="e.g. East Legon, Accra"
             containerStyle={styles.field}
+            returnKeyType="next"
+            onSubmitEditing={() => unitsRef.current?.focus()}
+            blurOnSubmit={false}
           />
 
           <View style={styles.row}>
             <TextField
+              ref={unitsRef}
               label="Number of Units"
               value={units}
               onChangeText={setUnits}
               placeholder="12"
               keyboardType="number-pad"
               containerStyle={styles.rowField}
+              returnKeyType="next"
+              onSubmitEditing={() => rentRef.current?.focus()}
+              blurOnSubmit={false}
             />
             <TextField
+              ref={rentRef}
               label="Monthly Rent (GH₵)"
               value={rent}
               onChangeText={setRent}
               placeholder="600"
               keyboardType="number-pad"
               containerStyle={styles.rowField}
+              returnKeyType="done"
+              onSubmitEditing={save}
             />
           </View>
         </Animated.View>

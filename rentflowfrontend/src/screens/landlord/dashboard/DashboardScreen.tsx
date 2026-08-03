@@ -48,8 +48,8 @@ function initialsOf(name?: string) {
 export function DashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { summary, loading, refresh } = usePortfolio();
-  const { requests } = useMaintenance();
+  const { summary, loading, refresh: refreshPortfolio } = usePortfolio();
+  const { requests, refresh: refreshMaintenance } = useMaintenance();
   const { payments, collected, expected } = usePayments();
 
   const openRequests = requests.filter((r) => r.status !== 'RESOLVED');
@@ -61,6 +61,10 @@ export function DashboardScreen() {
       return da > db ? 1 : da < db ? -1 : 0;
     })
     .slice(0, 5);
+
+  const refresh = async () => {
+    await Promise.all([refreshPortfolio(), refreshMaintenance()]);
+  };
 
   const stats: Stat[] = [
     { icon: 'business-outline', tint: Brand.primarySoft, color: Brand.primary, label: 'Properties', value: String(summary.properties) },
@@ -187,6 +191,13 @@ export function DashboardScreen() {
         {/* Recent payments */}
         <Animated.View entering={FadeInDown.delay(320).duration(500)} style={styles.sectionRow}>
           <Text style={styles.sectionTitle}>Recent Payments</Text>
+          <Pressable
+            onPress={() => router.push('/landlord/payments')}
+            hitSlop={8}
+            accessibilityRole="link"
+            accessibilityLabel="View all payments">
+            <Text style={{ fontSize: 13, fontWeight: '700', color: Brand.primary }}>View All</Text>
+          </Pressable>
         </Animated.View>
         <Animated.View entering={FadeInDown.delay(360).duration(500)} style={styles.card}>
           {recentPayments.length === 0 ? (

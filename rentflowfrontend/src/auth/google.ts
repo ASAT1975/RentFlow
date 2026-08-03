@@ -1,26 +1,42 @@
 /**
- * Google OAuth client IDs, read from env (`.env`). Create these in the Google
- * Cloud console (APIs & Services → Credentials → OAuth client ID) and add them:
+ * Google OAuth config for expo-auth-session.
  *
- *   EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=xxxx.apps.googleusercontent.com
- *   EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=xxxx.apps.googleusercontent.com
- *   EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=xxxx.apps.googleusercontent.com
+ * Setup steps:
+ * 1. Go to https://console.cloud.google.com → APIs & Services → Credentials
+ * 2. Create OAuth 2.0 Client IDs for Web, Android, and iOS
+ *    - Android: package = com.shaikh67.RentFlow, SHA-1 from `expo fetch:android:hashes`
+ *    - iOS: bundle ID = com.shaikh67.RentFlow
+ * 3. Create a .env file in the project root with:
  *
- * Env vars must be referenced with static dot-notation so Expo can inline them.
+ *    EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=xxxx.apps.googleusercontent.com
+ *    EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID=xxxx.apps.googleusercontent.com
+ *    EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID=xxxx.apps.googleusercontent.com
+ *
+ * 4. Run a development build (not Expo Go) — Google OAuth does not work in Expo Go
+ *    because Google blocks the exp:// redirect scheme.
+ *    Use: `npx expo run:android` or `npx expo run:ios`
  */
-import { Platform } from "react-native";
+import * as AuthSession from 'expo-auth-session';
+import { Platform } from 'react-native';
+
+const webClientId = process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID;
+const androidClientId = process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID;
+const iosClientId = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 
 export const googleConfig = {
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID || "placeholder-not-configured",
-  androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID || "placeholder-not-configured",
-  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID || "placeholder-not-configured",
+  webClientId: webClientId ?? 'placeholder-not-configured',
+  androidClientId: androidClientId ?? 'placeholder-not-configured',
+  iosClientId: iosClientId ?? 'placeholder-not-configured',
+  // Use the app scheme so Google accepts the redirect (requires dev build)
+  redirectUri: AuthSession.makeRedirectUri({ scheme: 'rentflow' }),
+  scopes: ['openid', 'profile', 'email'],
 } as const;
 
-/** True once the client ID for *this* platform is configured. */
+/** True only when the client ID for this platform is actually set. */
 export const googleConfigured = Boolean(
-  Platform.OS === "android"
-    ? process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID
-    : Platform.OS === "ios"
-      ? process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID
-      : googleConfig.webClientId,
+  Platform.OS === 'android'
+    ? androidClientId
+    : Platform.OS === 'ios'
+      ? iosClientId
+      : webClientId,
 );

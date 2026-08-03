@@ -8,7 +8,6 @@ import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ApiError } from '@/api';
-import { maintenanceApi } from '@/api';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { SegmentedControl } from '@/components/ui/segmented-control';
 import { TextField } from '@/components/ui/text-field';
@@ -66,16 +65,8 @@ export function ReportScreen() {
     if (!canSubmit || submitting) return;
     setSubmitting(true);
     try {
-      let photoUrl: string | undefined;
-      if (photos.length > 0) {
-        try {
-          photoUrl = await maintenanceApi.uploadPhoto(photos[0]);
-        } catch {
-          // photo upload failed — submit without it
-        }
-      }
       const body = `${description.trim()}\n\nCategory: ${category} · Priority: ${priority}`;
-      await submitRequest(title, body, photoUrl);
+      await submitRequest(title, body);
       setSubmitted(true);
     } catch (err) {
       const message =
@@ -190,23 +181,29 @@ export function ReportScreen() {
           </Animated.View>
         ) : submitted ? (
           <Animated.View entering={FadeIn.duration(350)} style={styles.successWrap}>
-            <View style={styles.successBadge}>
-              <Ionicons name="checkmark-circle" size={56} color={Brand.success} />
-            </View>
-            <Text style={styles.successTitle}>Request Sent 🎉</Text>
-            <Text style={styles.successBody}>
+            <Animated.View entering={FadeInDown.delay(100).duration(500)} style={styles.successBadge}>
+              <Ionicons name="checkmark-circle" size={72} color={Brand.success} />
+            </Animated.View>
+            <Animated.Text entering={FadeInDown.delay(200).duration(500)} style={styles.successTitle}>
+              Request Submitted! 🎉
+            </Animated.Text>
+            <Animated.Text entering={FadeInDown.delay(280).duration(500)} style={styles.successBody}>
               Your landlord has been notified and will review your report shortly.
-            </Text>
-            <View style={styles.successButton}>
+            </Animated.Text>
+            <Animated.View entering={FadeInDown.delay(360).duration(500)} style={styles.successButton}>
               <PrimaryButton
                 label="View My Requests"
-                variant="secondary"
                 onPress={() => {
                   resetForm();
                   setMode('requests');
                 }}
               />
-            </View>
+              <PrimaryButton
+                label="Submit Another"
+                variant="outline"
+                onPress={resetForm}
+              />
+            </Animated.View>
           </Animated.View>
         ) : (
           <Animated.View entering={FadeIn.duration(300)}>
@@ -235,6 +232,9 @@ export function ReportScreen() {
               onChangeText={setTitle}
               placeholder="e.g. Leaking kitchen tap"
               containerStyle={styles.field}
+              returnKeyType="next"
+              onSubmitEditing={() => {}}
+              blurOnSubmit={false}
             />
 
             <Text style={styles.label}>💬 Description</Text>

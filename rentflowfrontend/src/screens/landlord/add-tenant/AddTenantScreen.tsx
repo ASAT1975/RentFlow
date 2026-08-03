@@ -74,6 +74,7 @@ export function AddTenantScreen() {
             onChangeText={setName}
             placeholder="e.g. Adwoa Mensah"
             containerStyle={styles.field}
+            returnKeyType="done"
           />
           <Text style={styles.label}>Property</Text>
           <View style={styles.chips}>

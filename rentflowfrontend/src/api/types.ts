@@ -98,6 +98,7 @@ export type MaintenanceRequest = {
   description: string;
   status: MaintenanceStatus;
   submittedDate: string;
+  photoUrl?: string | null;
   tenant?: UserRef | null;
   property?: Property | null;
 };

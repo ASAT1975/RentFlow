@@ -1,42 +1,34 @@
-import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, Text, View } from "react-native";
+import { ActivityIndicator, View } from "react-native";
 
 import { Brand } from "@/constants/brand";
+import { useRouter } from "expo-router";
 import { useTenant } from "@/store/tenant";
+import { DashboardScreen } from "./DashboardScreen";
 
 export function TenantDashboardScreen() {
   const router = useRouter();
   const { unit, loading } = useTenant();
-  const [timedOut, setTimedOut] = useState(false);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setTimedOut(true), 10000);
-    return () => clearTimeout(timer);
-  }, []);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     if (loading) return;
-    if (unit) {
-      router.replace("/tenant/(tabs)/dashboard");
-    } else {
+    if (!unit) {
       router.replace("/tenant/referral");
+    } else {
+      setReady(true);
     }
   }, [loading, unit, router]);
 
-  if (timedOut && loading) {
+  if (!ready) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Brand.background }}>
-        <Text style={{ color: Brand.textSecondary }}>Could not connect. Please check your connection.</Text>
+        <ActivityIndicator color={Brand.primary} />
       </View>
     );
   }
 
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: Brand.background }}>
-      <ActivityIndicator color={Brand.primary} />
-    </View>
-  );
+  return <DashboardScreen />;
 }
 
 export default TenantDashboardScreen;

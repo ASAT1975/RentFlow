@@ -99,6 +99,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
     async (inviteCode: string): Promise<TenantUnit> => {
       const joined = normalize(await unitsApi.join(inviteCode.trim()));
       setUnit(joined);
+      refresh().catch((err) => console.error('Failed to refresh tenant unit:', err));
       return joined;
     },
     [],

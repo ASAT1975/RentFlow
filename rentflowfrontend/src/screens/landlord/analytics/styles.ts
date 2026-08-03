@@ -48,6 +48,11 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: Brand.textSecondary,
   },
+  viewAll: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Brand.primary,
+  },
 
   // Bar chart.
   chart: {

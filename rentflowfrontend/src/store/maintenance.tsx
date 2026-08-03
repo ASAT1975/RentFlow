@@ -24,6 +24,7 @@ export type MaintenanceItem = {
   description: string;
   status: MaintenanceStatus;
   submittedDate: string;
+  photoUrl?: string | null;
   /** Landlord-side attribution (present on the per-property listing). */
   propertyName?: string;
   tenantName?: string;
@@ -45,6 +46,7 @@ function toItem(request: MaintenanceRequest): MaintenanceItem {
     description: request.description,
     status: request.status,
     submittedDate: request.submittedDate,
+    photoUrl: request.photoUrl,
     propertyName: request.property?.name,
     tenantName: request.tenant?.name,
   };

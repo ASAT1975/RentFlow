@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import { ScrollView, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,6 +25,7 @@ function formatGhs(n: number) {
 }
 
 export function AnalyticsScreen() {
+  const router = useRouter();
   const { properties, summary } = usePortfolio();
   const { payments } = usePayments();
 
@@ -71,7 +73,13 @@ export function AnalyticsScreen() {
         <Animated.View entering={FadeInDown.duration(450)} style={styles.card}>
           <View style={styles.cardHead}>
             <Text style={styles.cardTitle}>Revenue</Text>
-            <Text style={styles.cardSub}>Last 6 months</Text>
+            <Pressable
+              onPress={() => router.push('/landlord/payments')}
+              hitSlop={8}
+              accessibilityRole="link"
+              accessibilityLabel="View all payments">
+              <Text style={styles.viewAll}>View Payments →</Text>
+            </Pressable>
           </View>
           <View style={styles.chart}>
             {revenueTrend.map((d, i) => {
