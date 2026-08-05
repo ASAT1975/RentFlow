@@ -1,7 +1,10 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { useState } from 'react';
+import * as NativeSplash from 'expo-splash-screen';
+import { useEffect, useState } from 'react';
 import { StyleSheet, useColorScheme } from 'react-native';
+
+NativeSplash.preventAutoHideAsync();
 
 import { Brand } from '@/constants/brand';
 import { SplashScreen } from '@/screens/splash';
@@ -14,6 +17,10 @@ import { TenantProvider } from '@/store/tenant';
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [splashVisible, setSplashVisible] = useState(true);
+
+  useEffect(() => {
+    NativeSplash.hideAsync();
+  }, []);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
