@@ -7,6 +7,7 @@ import { Alert, Linking, Modal, Pressable, ScrollView, Text, TextInput, View } f
 import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { reviewsApi } from '@/api';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { Brand } from '@/constants/brand';
 import { formatGhs, initialsOf } from '@/lib/format';
@@ -75,6 +76,8 @@ export function ProfileScreen() {
   const [hasReviewed, setHasReviewed] = useState(false);
   const [avatar, setAvatar] = useState<string | null>(null);
 
+  const [submittingReview, setSubmittingReview] = useState(false);
+
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -98,10 +101,18 @@ export function ProfileScreen() {
     router.replace('/');
   };
 
-  const submitReview = () => {
-    if (rating === 0) return;
-    setHasReviewed(true);
-    setRateVisible(false);
+  const submitReview = async () => {
+    if (rating === 0 || !unit) return;
+    setSubmittingReview(true);
+    try {
+      await reviewsApi.create(unit.propertyId, review.trim(), rating, 'TENANT_REVIEW');
+      setHasReviewed(true);
+      setRateVisible(false);
+    } catch {
+      Alert.alert('Failed to submit', 'Please try again.');
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   const call = () =>
@@ -337,7 +348,7 @@ export function ProfileScreen() {
                 textAlignVertical="top"
               />
 
-              <PrimaryButton label="Submit Review" disabled={rating === 0} onPress={submitReview} />
+              <PrimaryButton label="Submit Review" disabled={rating === 0 || submittingReview} onPress={submitReview} />
             </Pressable>
           </Animated.View>
         </Pressable>

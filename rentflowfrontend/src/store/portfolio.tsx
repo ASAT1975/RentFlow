@@ -72,7 +72,7 @@ function toLandlordProperty(
 }
 
 /** Build a tenant row from an occupied unit that has a tenant attached. */
-function toLandlordTenant(property: Property, unit: Unit): LandlordTenant {
+function toLandlordTenant(property: Property, unit: Unit, paymentStatus?: "Paid" | "Due" | "Overdue"): LandlordTenant {
   const name = unit.tenant?.name ?? "Tenant";
   return {
     id: `unit-${unit.id}`,
@@ -81,7 +81,7 @@ function toLandlordTenant(property: Property, unit: Unit): LandlordTenant {
     property: property.name,
     unit: unit.unitNumber,
     // Rent status comes from the payments feed (wired later); default to Due.
-    status: "Due",
+    status: paymentStatus ?? "Due",
     amount: formatGhs(unit.rentAmount ?? 0),
     tenantEmail: unit.tenant?.email,
     tenantPhone: unit.tenant?.phone ?? undefined,
@@ -144,6 +144,8 @@ type PortfolioContextValue = {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  /** Patch tenant rent statuses from the payments feed. */
+  syncTenantStatuses: (statusByEmail: Record<string, "Paid" | "Due" | "Overdue">) => void;
   /** Property being built in the onboarding wizard (setup → rooms → invite). */
   setupProperty: SetupProperty | null;
   createProperty: (input: NewPropertyInput) => Promise<SetupProperty>;
@@ -293,6 +295,19 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
     [refresh, setupProperty],
   );
 
+  const syncTenantStatuses = useCallback(
+    (statusByEmail: Record<string, "Paid" | "Due" | "Overdue">) => {
+      setTenants((prev) =>
+        prev.map((t) =>
+          t.tenantEmail && statusByEmail[t.tenantEmail]
+            ? { ...t, status: statusByEmail[t.tenantEmail] }
+            : t,
+        ),
+      );
+    },
+    [],
+  );
+
   const addTenant = useCallback((input: NewTenantInput) => {
     // Local-only for now; backend tenant assignment happens via unit invite
     // codes (wired in the tenant flow step).
@@ -317,6 +332,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       refresh,
+      syncTenantStatuses,
       setupProperty,
       createProperty,
       createUnit,
@@ -330,6 +346,7 @@ export function PortfolioProvider({ children }: { children: ReactNode }) {
       loading,
       error,
       refresh,
+      syncTenantStatuses,
       setupProperty,
       createProperty,
       createUnit,

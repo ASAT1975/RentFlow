@@ -35,16 +35,20 @@ public class JwtFilter extends OncePerRequestFilter {
             String token = authHeader.substring(7);
 
             if (jwtUtil.isTokenValid(token)) {
-                String email = jwtUtil.extractEmail(token);
-                var user = authService.findByEmail(email);
-
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        email,
-                        null,
-                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
-                );
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                try {
+                    String email = jwtUtil.extractEmail(token);
+                    var user = authService.findByEmailOptional(email).orElse(null);
+                    if (user != null) {
+                        var authToken = new UsernamePasswordAuthenticationToken(
+                                email,
+                                null,
+                                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                        );
+                        SecurityContextHolder.getContext().setAuthentication(authToken);
+                    }
+                } catch (Exception ignored) {
+                    // Invalid token — leave SecurityContext unauthenticated, Spring Security returns 401
+                }
             }
         }
 

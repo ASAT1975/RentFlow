@@ -69,7 +69,7 @@ const PaymentsContext = createContext<PaymentsContextValue | null>(null);
  */
 export function PaymentsProvider({ children }: { children: ReactNode }) {
   const { isAuthenticated, user } = useAuth();
-  const { properties } = usePortfolio();
+  const { properties, syncTenantStatuses } = usePortfolio();
 
   const role = user?.role;
   const [payments, setPayments] = useState<PaymentItem[]>([]);
@@ -93,7 +93,25 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
         const lists = await Promise.all(
           propertyIds.map((id) => paymentsApi.forProperty(id).catch(() => [])),
         );
-        setPayments(lists.flat().map(toItem));
+        const allPayments = lists.flat();
+        setPayments(allPayments.map(toItem));
+
+        // Cross-reference: for each tenant email, find their most recent payment status
+        const statusByEmail: Record<string, "Paid" | "Due" | "Overdue"> = {};
+        for (const p of allPayments) {
+          if (!p.tenant?.email) continue;
+          const email = p.tenant.email;
+          const next =
+            p.status === "PAID" ? "Paid"
+            : p.status === "OVERDUE" ? "Overdue"
+            : "Due";
+          // Overdue beats Due beats Paid for display
+          const prev = statusByEmail[email];
+          if (!prev || next === "Overdue" || (next === "Due" && prev === "Paid")) {
+            statusByEmail[email] = next;
+          }
+        }
+        syncTenantStatuses(statusByEmail);
       } else if (role === "TENANT") {
         const mine = await paymentsApi.mine();
         setPayments(mine.map(toItem));
@@ -105,7 +123,7 @@ export function PaymentsProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isAuthenticated, role, propertyIds]);
+  }, [isAuthenticated, role, propertyIds, syncTenantStatuses]);
 
   useEffect(() => {
     if (isAuthenticated) {

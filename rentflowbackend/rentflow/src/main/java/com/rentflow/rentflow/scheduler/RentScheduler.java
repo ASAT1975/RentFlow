@@ -36,7 +36,8 @@ public class RentScheduler {
         List<RentUnit> dueUnits = unitRepository
                 .findByStatusAndPaystackAuthCodeIsNotNullAndRentDueDayIsNotNull(UnitStatus.OCCUPIED)
                 .stream()
-                .filter(u -> u.getRentDueDay() == today)
+                .filter(u -> u.getRentDueDay() == today && u.getTenant() != null)
+                .filter(u -> !paymentRepository.existsByTenantAndDueDate(u.getTenant(), LocalDate.now()))
                 .toList();
 
         for (RentUnit unit : dueUnits) {
